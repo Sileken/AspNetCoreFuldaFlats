@@ -1,0 +1,110 @@
+<!--************************************************************
+ * File:            editProfileDataBar.component.html
+ * Author:          Michelle Rothenbuecher, Patrick Hasenauer
+ * LastMod:         13.12.2016
+ * Description:     Knockout Template for edit profile data bar.
+ ************************************************************-->
+<section>
+	<div class="container" data-bind="with: currentUser">
+		<div class="col-sm-12">
+			<div class="row">
+				<div class="col-sm-4 box-image-text">
+					<div class="row">
+						<div class="top">
+							<div class="image">
+								<div class="profilePicture-container-big">
+									<img data-bind="attr:{src: profilePicture}" class="img-responsive profilePicture-img" alt="Profilepicture">
+								</div>
+							</div>
+							<div class="bg"></div>
+							<div class="text">
+								<p class="buttons">
+									<a href="/pages/editProfilePicture" class="btn btn-template-transparent-primary"><i class="fa fa-link"></i>Edit Picture</a>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-8">
+					<form class="form-horizontal">
+						<fieldset class="form-group">
+							<legend>Personal Information</legend>
+							<div class="form-group">
+								<label for="firstName" class="control-label col-sm-2">First Name:</label>
+								<div class="col-sm-5">
+									<input type="text" class="form-control" id="firstName" data-bind="attr:{placeholder:firstName}, value: $parent.userChanges().firstName">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="lastName" class="control-label col-sm-2">Last Name:</label>
+								<div class="col-sm-5">
+									<input type="text" class="form-control" id="lastName" data-bind="attr:{placeholder:lastName}, value: $parent.userChanges().lastName">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="gender" class="control-label col-sm-2">Gender:</label>
+								<div class="col-sm-5">
+									<select class="form-control" id="gender" data-bind="value: gender">
+										<option>female</option>
+										<option>male</option>
+									</select>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="birthday" class="control-label col-sm-2">Birthday:</label>
+								<div class="col-sm-5">
+									<input type="date" class="form-control" id="birthday" data-bind="date: $parent.userChanges().birthday" placeholder="YYYY-MM-DD">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="email" class="control-label col-sm-2">E-Mail:</label>
+								<div class="col-sm-5">
+									<input type="email" class="form-control" id="email" data-bind="attr:{placeholder:email} , value: $parent.userChanges().email">
+								</div>
+							</div>
+						</fieldset>
+						<fieldset class="form-group" data-bind="if: $data.type==2">
+							<legend>Contact Information</legend>
+							<div class="form-group">
+								<label for="phoneNumber" class="control-label col-sm-2">Phone Number:</label>
+								<div class="col-sm-5">
+									<input type="number" class="form-control" id="phoneNumber" data-bind="attr:{placeholder:phoneNumber}, value: $parent.userChanges().phoneNumber">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="zipCode" class="control-label col-sm-2">ZIP Code:</label>
+								<div class="col-sm-5">
+									<input type="number" class="form-control" id="zipCode" data-bind="attr:{placeholder:zipCode} , value: $parent.userChanges().zipCode">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="city" class="control-label col-sm-2">City:</label>
+								<div class="col-sm-5">
+									<input type="text" class="form-control" id="city" data-bind="attr:{placeholder:city}, , value: $parent.userChanges().city">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="street" class="control-label col-sm-2">Street:</label>
+								<div class="col-sm-5">
+									<input type="text" class="form-control" id="street" data-bind="attr:{placeholder:street}, value: $parent.userChanges().street">
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="housenumber" class="control-label col-sm-2">House Number:</label>
+								<div class="col-sm-5">
+									<input type="number" class="form-control" id="housenumber" data-bind="attr:{placeholder:houseNumber}, value: $parent.userChanges().houseNumber">
+								</div>
+							</div>
+						</fieldset>
+						<div class="row">
+							<div class="text-center col-sm-7">
+								<a href="" type="submit" data-bind="click: $parent.accept" class="btn btn-success "><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Accept</a>
+								<a href="/pages/myProfile" type="submit" class="btn btn-danger btn-margin-left"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

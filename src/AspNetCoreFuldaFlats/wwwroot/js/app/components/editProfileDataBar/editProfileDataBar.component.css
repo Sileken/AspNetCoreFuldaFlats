@@ -1,0 +1,12 @@
+/*************************************************************
+ * File:            editProfileDataBar.component.css
+ * Author:          Michelle Rothenbuecher
+ * LastMod:         10.12.2016
+ * Description:     css for editProfileData
+ *************************************************************/
+/* Special component css here and general css in main.css */
+.errorField{
+    border-style: solid;
+    border-width: 2px;
+    border-color: #a94442;
+}

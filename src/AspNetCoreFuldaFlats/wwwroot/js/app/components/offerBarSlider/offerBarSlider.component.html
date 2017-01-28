@@ -1,0 +1,74 @@
+<!-- ************************************************************
+ * File:            offerBarSlider.component.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Knockout Template for offer bar slider.
+ ************************************************************-->
+<!-- ko if: offers().length > 0 -->
+<section class="bar background-white no-mb">
+    <div class="container">
+        <div class="col-md-12">
+            <!-- ko if: barTitle -->
+            <div class="heading text-center">
+                <h2 data-bind="text: barTitle"></h2>
+            </div>
+            <!-- /ko -->
+            <div data-bind="owlCarousel: { data: offers, as: 'offer', owlOptions: owlCarouselOptions }" class="owl-carousel-offers owl-carousel">
+                <div class="col-xs-12">
+                    <div class="offer-brief-details box-image-text table-bordered">
+                        <!-- ko if: offer.thumbnailUrl -->
+                        <div class="top">
+                            <div class="image thumbnail-container">
+                                <img data-bind="attr: { src:offer.thumbnailUrl }" alt="" class="img-responsive thumbnail-img">
+                            </div>
+                            <div class="bg"></div>
+                            <div class="text">
+                                <p class="buttons">
+                                    <a href="javascript: void(0)" data-bind="click:$parent.viewDetails" class="btn btn-template-transparent-primary"><i class="fa fa-link"></i>View Details</a>
+                                </p>
+                            </div>
+
+                        </div>
+                        <!-- /ko -->
+                        <div class="content">
+                            <h4>
+                                <span data-bind="text: offer.offerType"></span></br>
+                                <small><a href="javascript: void(0)" data-bind="click: $parent.viewDetails, text: offer.title"></a></small>
+                            </h4>
+                            <div class="offer-brief-details-detail row background-gray">
+                                <div class="col-lg-4">
+                                    <div class="offer-brief-details-detail-value"><strong data-bind="text: offer.uniDistance"></strong><strong> km</strong></div>
+                                    <div class="offer-brief-details-detail-key"><small>to University Fulda</small></div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="offer-brief-details-detail-value">
+                                        <strong data-bind="text: offer.size"></strong>
+                                        </strong><strong>m²</strong>
+                                    </div>
+                                    <div class="offer-brief-details-detail-key"><small>Size</small></div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="offer-brief-details-detail-value price-wrapper">
+                                        <div class="price">
+                                            <strong data-bind="text: $parent.getTotalOfferRent(offer)"></strong>
+                                            <strong>€</strong>
+                                        </div>
+                                        <div class="rate">
+                                            <strong>/ </strong>
+                                            <strong data-bind="text: offer.priceType"></strong>
+                                        </div>
+                                    </div>
+                                    <div class="offer-brief-details-detail-key">
+                                        <small>Rental</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</section>
+<!-- /ko -->

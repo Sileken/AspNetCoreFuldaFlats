@@ -1,0 +1,20 @@
+/************************************************************
+ * File:            tagCloudBar.component.css
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for tag cloud bar.
+ ************************************************************/
+div.jqcloud { color: #09f; }
+div.jqcloud a { color: inherit; }
+div.jqcloud a:hover { color: #0df; }
+div.jqcloud a:hover { color: #0cf; }
+div.jqcloud span.w10 { color: #39d; }
+div.jqcloud span.w9 { color: #39d; }
+div.jqcloud span.w8 { color: #39d; }
+div.jqcloud span.w7 { color: #0cf; }
+div.jqcloud span.w6 { color: #90c5f0; }
+div.jqcloud span.w5 { color: #B3E0FF; }
+div.jqcloud span.w4 { color: #90c5f0; }
+div.jqcloud span.w3 { color: #a0ddff; }
+div.jqcloud span.w2 { color: #99ccee; }
+div.jqcloud span.w1 { color: #99ccee; }

@@ -1,0 +1,59 @@
+<!--************************************************************
+ * File:            editProfilePictureBar.component.js
+ * Author:          Michelle Rothenbuecher, Patrick Hasenauer
+ * LastMod:         13.12.2016
+ * Description:     Knockout Template for edit profile picture bar.
+ ************************************************************-->
+<section>
+	<div class="container" data-bind="with: currentUser">
+		<div class="col-sm-12">
+			<div class="row">
+				<div class="col-sm-4 profile-image-container">
+					<div class="image">
+						<div class="profilePicture-container-big">
+							<img data-bind="attr:{src: profilePicture}" class="img-responsive profilePicture-img" alt="Profilepicture">
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-7">
+					<form class="form-horizontal">
+						<fieldset class="form-group default-image-container">
+							<legend>Choose from given Pictures</legend>
+							<a href="javascript:void(0)" data-bind="click: function(data, event){$parent.standardPicture('/img/cat.png', data, event)}">
+								<img src="../img/cat.png" class="img-responsive img-circle col-sm-3" alt="Cat">
+							</a>
+							<a href="javascript:void(0)" data-bind="click: function(data, event){$parent.standardPicture('/img/dog.png', data, event)}">
+								<img src="../img/dog.png" class="img-responsive img-circle col-sm-3" alt="Dog">
+							</a>
+							<a href="javascript:void(0)" data-bind="click: function(data, event){$parent.standardPicture('/img/cupcake.png', data, event)}">
+								<img src="../img/cupcake.png" class="img-responsive img-circle col-sm-3" alt="Cupcake">
+							</a>
+							<a href="javascript:void(0)" data-bind="click: function(data, event){$parent.standardPicture('/img/meat.png', data, event)}">
+								<img src="../img/meat.png" class="img-responsive img-circle col-sm-3" alt="Meat">
+							</a>
+						</fieldset>
+						<fieldset class="form-group">
+							<legend>Upload Picture</legend>
+							<div class="row">
+								<div class="col-md-12">
+									<div class="alert alert-info" role="alert">Please make sure you have the legal rights on images before you upload them.</div>
+								</div>
+							</div>
+							<div class="progress">
+								<div id="uploadProgressBar" class="progress-bar progress-bar-info" role="progressbar" style="width: 0%">
+								</div>
+							</div>
+							<div class="alert alert-danger" id="alertProfilePictureUpload" role="alert">
+							</div>
+							<input type="file" id="hiddenFileInput" name="file" class="hidden" accept="image/*" data-bind="event: {change: $parent.uploadPicture}">
+							<div class="clearfix">
+								<a data-bind="click: $parent.openFileDialog" type="button" class="btn btn-template-main pull-left">Choose Picture from Computer</a>
+								<a href="/pages/myProfile" type="submit" data-bind="click: cancelEditOffer" class="btn btn-danger btn-margin-left pull-right"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</a>
+							</div>
+						</fieldset>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

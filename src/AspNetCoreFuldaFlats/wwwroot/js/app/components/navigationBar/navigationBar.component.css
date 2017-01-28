@@ -1,0 +1,83 @@
+/************************************************************
+ * File:            navigationBar.component.css
+ * Author:          Patrick Hasenauer, Jonas Kleinlauf
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for navigation bar.
+ ************************************************************/
+/* Special component css here and general css in main.css */
+.navbar-brand > .logo{
+  width: 250px;
+  margin-top: 10px;
+}
+
+/* ExtraSmall Devices, Tablets */
+@media only screen and (min-width : 480px) {
+  .navbar-brand > .logo{
+    width: 250px;
+    margin-top: 10px;
+  }
+}
+
+/* Small Devices, Tablets */
+@media only screen and (min-width : 768px) {
+  .navbar-brand > .logo{
+    width: 230px;
+    margin-top: 10px;
+  }
+}
+
+/* Medium Devices, Desktops */
+@media only screen and (min-width : 992px) {
+  .navbar-brand > .logo{
+    width: 250px;
+    margin-top: 10px;
+  }
+}
+
+/* Large Devices, Wide Screens */
+@media only screen and (min-width : 1200px) {
+  .navbar-brand > .logo{
+    width: 250px;
+    margin-top: 10px;
+  }
+}
+
+@media (min-width: 767px) {
+  #navigation {
+    padding-right: 0px;
+  }
+
+  #navigation .nav-profile-image-container > img {
+    height: 50px;
+    margin-left: 10px;
+  }
+
+  #navigation .nav-profile-image-container {
+    margin: 10px 15px;
+  }
+}
+
+
+@media (max-width: 767px) {
+  #navigation {
+    position: relative;
+  }
+
+  #navigation .nav-profile-image-container{
+    position: absolute;
+    top: 0px;
+    right: 10px;
+    z-index: 100;
+  }
+
+  #navigation .nav-profile-image-container > img{
+    height: 100px;
+    margin-top: 10px
+  }
+}
+
+@media (max-width: 767px) {
+  .navmenuentry{
+    width: 50%
+  }
+}

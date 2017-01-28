@@ -1,0 +1,60 @@
+<!--************************************************************
+ * File:            contactModalDialog.component.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Knockout Template for contact modal dialog.
+ ************************************************************-->
+<div class="modal fade" id="contactModalDialog" role="dialog">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">Contact</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-4">
+						<p>
+							<!-- ko if: organisationName -->
+							<strong data-bind="text: organisationName"></strong><br />
+							<!-- /ko -->
+							<span>
+								<!-- ko if: street -->
+								<span data-bind="text: street"></span>
+								<!-- /ko -->
+								<!-- ko if: housenumber -->
+								<span data-bind="text: housenumber"></span>
+								<!-- /ko -->
+							</span><br />
+							<span>
+								<!-- ko if: zipCode -->
+								<span data-bind="text: zipCode"></span>
+								<!-- /ko -->
+								<!-- ko if: city -->
+								<span> </span>
+								<span  data-bind="text: city"></span>
+								<!-- /ko -->
+							</span><br />
+							<!-- ko if: country -->
+							<span data-bind="text: country"></span>
+							<!-- /ko -->
+						</p>
+						<p>
+							<!-- ko if: phone -->
+							<span>Phone Number: <a data-bind="text: phone, attr: { href: 'tel:' + phone() }"></a></span><br />
+							<!-- /ko -->
+							<!-- ko if: email -->
+							<span>E-Mail: <a data-bind="text: email, attr: { href: 'mailto:' + email() }"></a></span>
+							<!-- /ko -->
+						</p>
+					</div>
+					<!-- ko if: leafletMapOptions -->
+					<div id="contactMapContainer" class="col-md-8">
+						<div id="contactMap" class="mapColumn"></div>
+					</div>
+					<!-- /ko -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

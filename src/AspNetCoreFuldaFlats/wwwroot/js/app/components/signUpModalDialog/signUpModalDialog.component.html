@@ -1,0 +1,66 @@
+<!--************************************************************
+ * File:            signupModalDialog.component.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Knockout Template for sign up dialog.
+ ************************************************************-->
+<div class="modal fade modal" id="signUpModalDialog" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button data-bind="click: resetDialog" type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Sign Up</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <!-- ko if: internalError-->
+                    <div class="alert alert-danger">
+                        <strong>Internal Error:</strong> Please try it again later.
+                    </div>
+                    <!-- /ko -->
+                    <!-- ko if: isSignUpDataError && signUpDataErrorMessage-->
+                    <div data-bind="text: signUpDataErrorMessage" class="alert alert-danger">
+                    </div>
+                    <!-- /ko -->
+                    <input data-bind="textInput: firstName, css: { valid: firstName() && !invalidFirstName(), inValid: invalidFirstName() && signUpDataErrorMessage() }"
+                        maxlength="255" type="text" class="form-control" placeholder="First Name" autofocus>
+                    <input data-bind="textInput: lastName, css: { valid: lastName() && !invalidLastName(), inValid: invalidLastName() && signUpDataErrorMessage() }"
+                        maxlength="255" type="text" class="form-control" placeholder="Last Name">
+                    <div class="input-group">
+                        <input data-bind="textInput: eMail, css: { valid: isValidEmail() && !invalidEmail(), inValid: invalidEmail() && signUpDataErrorMessage() }"
+                            maxlength="255" type="email" class="form-control" placeholder="Email">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-envelope"></span></div>
+                    </div>
+                    <div class="input-group">
+                        <input data-bind="textInput: password, css: { valid: isValidPassword() && !invalidPassword(), inValid: invalidPassword() && signUpDataErrorMessage() }"
+                            minlength="5" maxlength="255" type="password" class="form-control" placeholder="Password with min. length of 5">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></div>
+                    </div>
+                    <div class="input-group">
+                        <input data-bind="textInput: confirmPassword, css: { valid: isValidPassword() && !invalidPassword(), inValid: invalidPassword() && signUpDataErrorMessage() }"
+                            minlength="5" maxlength="255" type="password" class="form-control" placeholder="Confirm Password">
+                        <div class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></div>
+                    </div>
+                    <div class="input-group">
+                        <input data-bind="date: birthDay, css: { valid: isValidBirthday() && !invalidBirthday(), inValid: invalidBirthday() && signUpDataErrorMessage() }"
+                            type="date" class="form-control" placeholder="YYYY-MM-DD">
+                        <div class="input-group-addon">Birthday</div>
+                    </div>
+                    <select data-bind="options: genders,
+                       textInput: selectedGender, optionsCaption: 'Choose Gender', optionsAfterRender: optionsAfterRender , css: { valid: selectedGender() && !invalidGender(), inValid: invalidGender() && signUpDataErrorMessage() }"
+                        class="form-control"></select>
+                    <div class="form-group" id="termsOfUseAgreementGroup">
+                        <label for="termsOfUseAgreement"><input id="termsOfUseAgreement" data-bind="bootstrapSwitch: termsOfUseAgreement, bootstrapSwitchOptions: { onText: 'Yes', onColor: 'primary', offColor: 'danger', offText: 'No', animate: true, size: 'mini' }" type="checkbox"> I agree to <span data-bind="text: domain"></span> <a target="_blank" data-bind="attr: { href: termsOfUsePageInfo().url }">Terms of Service</a></label>
+                    </div>
+                    <button data-bind="click: signUp, enable: formIsValid() && !(internalError() || isSignUpDataError())" class="btn btn-template-primary btn-block">Sign Up</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="text-center">
+                    <span>Already have an account? <a data-bind="click: resetDialog" href="javascript: void(0)" data-dismiss="modal"
+                            data-toggle="modal" data-target="#signInModalDialog">Sign In</a></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

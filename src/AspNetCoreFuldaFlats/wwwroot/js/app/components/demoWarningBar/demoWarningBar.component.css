@@ -1,0 +1,10 @@
+/************************************************************
+ * File:            demoWarningBar.component.css
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for demo warning bar.
+ ************************************************************/
+#top{
+  background: #6060ff;
+  font-weight: bold;
+}

@@ -1,0 +1,115 @@
+<!--************************************************************
+ * File:            searchResultBar.component.html
+ * Author:          Jonas Kleinkauf, Patrick Hasenauer
+ * LastMod:         13.12.2016
+ * Description:     Knockout Template for Search Results
+ ************************************************************ -->
+<section class="no-margin search-result-container">
+    <!-- ______________ Sort Select ______________ -->
+    <div class="row sort-row">
+        <div class="col-lg-2 col-md-4 col-sm-4">
+            <div class="input-group">
+                <select class="form-control" data-bind="options: sortCriteria,
+                        optionsText: 'name',
+                        value: selectedSortCriteria, event:{change: sortOffers}">
+                </select>
+                <div class="input-group-addon"><span class="glyphicon glyphicon-sort" aria-hidden="true"></span></div>
+            </div>
+        </div>
+         <div class="col-lg-2 col-md-4 col-sm-4 text-top">
+             <h3 class="result-count" data-bind="visible: loadedResults()"><span data-bind="text: offers().length"></span> Results</h3>
+         </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 search-result-colums scroll-y" data-bind="visible: offers().length == 0 && loadedResults()">
+            <div class="panel panel-offer-result">
+                <div class="panel-body">
+                    <div class="alert alert-info">
+                        <h4>
+                            There are no available flats matching the criteria which you have specified.<br \>
+                            <small>In order to return more great flats in your searches, try adjusting your search criteria.</small></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ______________ RESULTS ______________ -->
+        <div class="col-md-6 search-result-colums scroll-y" data-bind="foreach: { data: offers, as: 'offer' }">
+            <div class="panel panel-offer-result">
+                <div class="panel-body">
+                    <!-- Hoverable Image -->
+                    <div class="offer-brief-detail-1 box-image-text col-md-5">
+                        <div class="top">
+                            <div class="image thumbnail-container">
+                                <img data-bind="attr: { src: offer.thumbnailUrl }" alt="" class="img-responsive thumbnail-img">
+                            </div>
+                            <div class="bg"></div>
+                            <div class="text">
+                                <p class="buttons">
+                                    <a data-bind="attr: { href: offer.detailsUrl }" class="btn btn-template-transparent-primary"><i class="fa fa-link"></i>View Details</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Details -->
+                    <div class="col-md-7">
+                        <!-- Title -->
+                        <div class="row">
+                            <div class="col-xs-10 offer-brief-title">
+                                <a data-bind="attr: { href: offer.detailsUrl }">
+                                    <h4 data-bind="text: offer.title"></h4>
+                                </a>
+                            </div>
+                            <!-- Favorite Button -->
+                            <div class="col-xs-2 offer-brief-favorite-icon text-right">
+                                <span data-bind="ifnot: offer.isFavorite">
+                                    <span class="glyphicon glyphicon glyphicon-heart-empty favorite-icon purpleblue-text" aria-hidden="true" 
+                                    title="Set as Favorite" data-bind="click: $parent.setFavorite"></span>
+                                </span>
+                                <span data-bind="if: offer.isFavorite">
+                                    <span class="glyphicon glyphicon glyphicon-heart favorite-icon purpleblue-text" aria-hidden="true" 
+                                    title="Remove from Favorites" data-bind="click: $parent.unsetFavorite"></span>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Tags -->
+                        <div data-bind="css: { 'hidden': !(offer.tags && offer.tags.length > 0) }" class="row">
+                            <h4 data-bind="foreach: { data: offer.tags, as: 'tag' }">
+                                <span class="label label-default" data-bind="text: tag.title"></span>
+                            </h4>
+                        </div>
+                        <!-- Description -->
+                        <div class="row">
+                            <p data-bind="truncate: offer.description, maxLength: 160"></p>
+                        </div>
+                        <!-- Price -->
+                        <div class="row bottom text-center row-eq-height-md">
+                            <div class="col-sm-4 offer-result-keyfigures">
+                                <div class="offer-brief-detail-1-details-value"><strong data-bind="text: offer.uniDistance"></strong><strong> km</strong></div>
+                                <div class="offer-brief-detail-1-details-key"><small>to University Fulda</small></div>
+                            </div>
+                            <div class="col-sm-4 offer-result-keyfigures">
+                                <div class="offer-brief-detail-1-details-value"><strong data-bind="text: offer.size"></strong><strong> m²</strong></div>
+                                <div class="offer-brief-detail-1-details-key"><small>Size</small></div>
+                            </div>
+                            <div class="col-sm-4 offer-result-keyfigures">
+                                <div class="offer-brief-detail-1-details-value price-wrapper">
+                                    <span class="price"><strong data-bind="text: offer.rent"></strong><strong> €</strong></span>
+                                    <span class="rate"><strong>/ </strong><strong data-bind="text: offer.rentType"></strong></span>
+                                </div>
+                                <div class="offer-brief-detail-1-details-key"><small data-bind="text: offer.offerType"></small></div>
+                            </div>
+                        </div>
+                        <!-- Created on -->
+                        <div class="row">
+                            <span class="col-xs-12 created-on">Created on <span data-bind="text: offer.creationDateFormat"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ______________ MAP ______________ -->
+        <div id="resultMapContainer" class="col-md-6">
+            <div id="resultMap" class="mapColumn"></div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,31 @@
+<!--************************************************************
+ * File:            breadcrumbBar.component.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         13.12.2016
+ * Description:     Knockout Template for breadcrumb bar.
+ ************************************************************-->
+<div id="heading-breadcrumbs-container">
+    <div id="heading-breadcrumbs" class="dark-mask">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- ko if: currentPageInfo -->
+                    <h1 data-bind="text: currentPageInfo().title"></h1>
+                    <!-- /ko -->
+                </div>
+                <div class="col-md-6">
+                    <!-- ko if: homePageInfo && currentPageInfo -->
+                    <ul class="breadcrumb">
+                        <li>
+                            <a data-bind="attr: { href: homePageInfo().url }, text: homePageInfo().title"></a>
+                        </li>
+                        <li>
+                            <span data-bind="text: currentPageInfo().title"></span>
+                        </li>
+                    </ul>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,159 @@
+/************************************************************
+ * File:            searchResultBar.component.css
+ * Author:          Jonas Kleinkauf, Patrick Hasenauer
+ * LastMod:         13.12.2016
+ * Description:     Custom CSS for search result bar.
+ ************************************************************/
+
+.no-margin {
+  margin: 0;
+}
+
+.sort-row{
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.search-result-colums {
+  height: 300px;
+}
+
+.search-result-container .result-count {
+  margin: 5px 0px 0px 0px;
+  color: #31708f;
+}
+
+/* Extra Small Devices, Phones */
+@media only screen and (min-width: 480px) {
+ .search-result-colums {
+    height: 400px;
+  }
+}
+
+/* Small Devices, Tablets */
+@media only screen and (min-width: 768px) {
+ .search-result-colums {
+    height: 500px;
+  }
+}
+
+/* Medium Devices, Desktops */
+@media only screen and (min-width: 992px) {
+ .search-result-colums {
+    height: 600px;
+  }
+}
+
+/* Large Devices, Wide Screens */
+@media only screen and (min-width: 1200px) {
+ .search-result-colums {
+    height: 800px;
+  }
+}
+
+.scroll-y {
+  overflow-y: auto;
+}
+
+.search-result-container > .row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.offer-brief-title,
+.offer-brief-favorite-icon{
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.panel-offer-result {
+  margin-bottom: 20px;
+  background-color: #fff;
+  border: 1px solid #eeeeee;
+  border-radius: 4px;
+  -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+.offer-result-keyfigures {
+  background-color: #eeeeee;
+  border: 1px solid #dddddd;
+  padding: 0.5rem;
+}
+
+.created-on {
+  padding: 0px;
+  margin-top: 5px;
+  color: #999999;
+}
+
+.label {
+  line-height: 2.5rem !important;
+}
+
+@media only screen and (min-width : 768px) {
+  .row-eq-height-md {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display:         flex;
+  }
+}
+
+/* Map */
+
+/* Extra Small Devices, Phones */
+@media only screen and (min-width: 480px) {
+  #resultMapContainer .mapColumn {
+    height: 380px;
+  }
+}
+
+/* Small Devices, Tablets */
+@media only screen and (min-width: 768px) {
+  #resultMapContainer .mapColumn {
+    height: 480px;
+  }
+}
+
+/* Medium Devices, Desktops */
+@media only screen and (min-width: 992px) {
+  #resultMapContainer .mapColumn {
+    height: 580px;
+  }
+}
+
+/* Large Devices, Wide Screens */
+@media only screen and (min-width: 1200px) {
+  #resultMapContainer .mapColumn {
+    height: 780px;
+  }
+}
+
+#resultMapContainer {
+  padding: 10px;
+  background-color: #eeeeee;
+}
+
+#resultMapContainer .leaflet-top,
+.leaflet-bottom {
+  z-index: 400 !important;
+}
+
+#resultMapContainer .marker-popup {
+  width: 250px;
+}
+
+#resultMapContainer .map-popup-details {
+  background-color: #eeeeee;
+  border: 1px solid #dddddd;
+  padding: 0.5rem;
+}
+
+#resultMapContainer .map-popup-img {
+  color: #FFFFFF !important;
+}
+
+#resultMapContainer .map-popup-viewtext {
+  height: 30% !important;
+}

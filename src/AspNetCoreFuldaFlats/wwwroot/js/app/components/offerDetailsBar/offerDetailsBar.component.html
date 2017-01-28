@@ -1,0 +1,498 @@
+<!--************************************************************
+ * File:            offerDetailsBar.component.html
+ * Author:          Martin Herbener, Jonas Kleinkauf, Patrick Hasenauer
+ * LastMod:         05.12.2016
+ * Description:     Knockout Template for offer details bar.
+ ************************************************************-->
+<section class="offer-details-bar">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-11 text-center">
+                <h1 data-bind="text: offer().title"></h1>
+            </div>
+            <div class="col-md-1">
+                <span data-bind="ifnot: isFavorite">
+                    <h1><span class="glyphicon glyphicon glyphicon-heart-empty favorite-icon" aria-hidden="true" 
+                        title="Set Favorite" data-bind="click: setFavorite"></span></h1>
+                </span>
+                <span data-bind="if: isFavorite">
+                    <h1><span class="glyphicon glyphicon glyphicon-heart favorite-icon purpleblue-text" aria-hidden="true" 
+                        title="Remove from Favorites" data-bind="click: unsetFavorite"></span></h1>
+                </span>
+            </div>
+        </div>
+        <div class="row">
+            <div id="mediaObjectsCarousel" class="carousel slide col-md-12" data-ride="carousel">
+                <ol class="carousel-indicators" data-bind="foreach: { data: offer().mediaObjects, as: 'mediaObject'}">
+                    <li data-target="#mediaObjectsCarousel" data-bind="attr:{'data-slide-to': mediaObject.carouselIndex}, css: { active: mediaObject.carouselActive }"></li>
+                </ol>
+                <div class="carousel-inner" role="listbox" data-bind="foreach: { data: offer().mediaObjects, as: 'mediaObject'}">
+                    <div class="item" data-bind="css: { active: mediaObject.carouselActive }">
+                        <div class="mediaObject-container">
+                            <a data-bind="attr:{href: mediaObject.mainUrl}" data-lightbox="mediaObjectsLightbox">
+                                <img data-bind="attr: {src: mediaObject.mainUrl}" class="mediaObject-img">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Controls -->
+                <a class="left carousel-control" href="#mediaObjectsCarousel" role="button" data-slide="prev">
+                    <span class="glyphicon glyphicon-chevron-left blue-text" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="right carousel-control" href="#mediaObjectsCarousel" role="button" data-slide="next">
+                    <span class="glyphicon glyphicon-chevron-right blue-text" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div><br>
+        <legend class="spacing-top">General Information</legend>
+        <div class="row">
+            <div class="col-xs-6">
+                <form class="form-horizontal">
+                    <div class="row">
+                        <label class="control-label col-sm-6">Offer Type:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().offerType"></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-sm-6">Size:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().size + ' m²'"></p>
+                        </div>
+                    </div>
+                    <!-- ko if: showField -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Rooms:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().rooms"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- ko if: showField -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Rent Type:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().rentType"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- ko if: showField -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Price Type:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().priceType"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                </form>
+            </div>
+            <div class="col-xs-6">
+                <form class="form-horizontal">
+                    <!-- ko ifnot: offer().rent == 0 -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Rent:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().rent + ' €'"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- ko if: showField -->
+                    <!-- ko ifnot: offer().sideCosts == 0 -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Side Costs:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().sideCosts + ' €'"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- /ko -->
+                    <!-- ko if: showField -->
+                    <!-- ko ifnot: offer().fullPrice == 0 -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Full Price:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().fullPrice + ' €'"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- /ko -->
+                    <!-- ko if: showField -->
+                    <!-- ko ifnot: offer().deposit == 0 -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Deposit:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().deposit + ' €'"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- /ko -->
+                    <!-- ko if: showField -->
+                    <!-- ko ifnot: offer().commission == 0 -->
+                    <div class="row">
+                        <label class="control-label col-sm-6">Commission:</label>
+                        <div class="col-sm-6">
+                            <p class="form-control-static bold-text" data-bind="text: offer().commission + ' €'"></p>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- /ko -->
+                </form>
+            </div>
+        </div>
+        <br>
+
+        <!-- ko if: showTags -->
+        <legend class="spacing-top">Tags</legend>
+        <div class="row">
+            <div class="col-md-12">
+                <h4 data-bind="foreach: { data: offer().tags, as: 'tag' }">
+                    <span class="label label-default tag-line" data-bind="text: tag.title"></span>
+                </h4>
+            </div>
+        </div><br>
+        <!-- /ko -->
+
+        <div data-bind="if: isAuthenticated">
+            <legend class="spacing-top">Landlord</legend>
+            <div class="row">
+                <div class="col-md-6">
+                    <form class="form-horizontal">
+                        <div class="row">
+                            <label class="control-label col-sm-6">Rating:</label>
+                            <div class="col-sm-6 star-spacing">
+                                <div class="bs-glyphicons form-control-static">
+                                    <span class="bs-glyphicons-list">
+										<span data-bind="css: { 'hidden' : landlord().averageRating < 1}" class="glyphicon glyphicon-star gold-text"></span>
+                                    <span data-bind="css: { 'hidden' : landlord().averageRating < 2}" class="glyphicon glyphicon-star gold-text"></span>
+                                    <span data-bind="css: { 'hidden' : landlord().averageRating < 3}" class="glyphicon glyphicon-star gold-text"></span>
+                                    <span data-bind="css: { 'hidden' : landlord().averageRating < 4}" class="glyphicon glyphicon-star gold-text"></span>
+                                    <span data-bind="css: { 'hidden' : landlord().averageRating < 5}" class="glyphicon glyphicon-star gold-text"></span>
+                                    <span data-bind="css: { 'hidden' : landlord().averageRating % 1 == 0 || landlord().averageRating == 0 }" class="glyphicon glyphicon-star half gold-text"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Name:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: landlord().lastName + ', ' + landlord().firstName"></p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Phone Number:</label>
+                            <div class="col-sm-6">
+                                <a data-bind="attr: { href: 'tel:' + landlord().phoneNumber }">
+                                    <p class="form-control-static bold-text" data-bind="text: landlord().phoneNumber"></p>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">E-Mail:</label>
+                            <div class="col-sm-6">
+                                <a data-bind="attr: { href: 'mailto:' + landlord().email }">
+                                    <p class="form-control-static bold-text" data-bind="text: landlord().email"></p>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Office:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: landlord().officeAddress"></p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="profilePicture-container-medium left">
+                            <img data-bind="attr: {src: landlord().profilePicture}" class="img-responsive profilePicture-img" alt="Profilepicture">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <legend>Location</legend>
+            <div class="row centric">
+                <div class="col-md-12 location-description">
+                    <span data-bind="text: offer().street"></span>&nbsp;
+                    <span data-bind="text: offer().houseNumber"></span>,&nbsp;
+                    <span data-bind="text: offer().zipCode"></span>&nbsp;
+                    <span data-bind="text: offer().city"></span>&nbsp; (Floor&nbsp;
+                    <span data-bind="text: offer().floor"></span>)&nbsp;, Distance to Fulda University:
+                    <span data-bind="text: offer().uniDistance"></span>&nbsp;km
+                </div>
+            </div>
+            <div class="row top-spacing">
+                <div class="col-md-12">
+                    <div id="detailsMap" class="detailsMap-container">
+                    </div>
+                </div>
+            </div>
+            <br>
+            <legend>Description</legend>
+            <div class="row">
+                <div class="col-sm-12">
+                    <p data-bind="text: offer().description"></p>
+                </div>
+            </div><br>
+            <legend>Detail Information</legend>
+            <div class="row">
+                <div class="col-xs-6">
+                    <form class="form-horizontal">
+                        <div class="row">
+                            <label class="control-label col-sm-6">Bathroom:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: offer().bathroomDescription"></p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Bathroom Numbers:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: offer().bathroomNumber"></p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Kitchen:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: offer().kitchenDescription"></p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Cellar:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().cellar -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().cellar -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Parking:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().parking -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().parking -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Elevator:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().elevator -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().elevator -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Pets:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().pets -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().pets -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Furnished:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().furnished -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().furnished -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Accessability:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().accessability -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().accessability -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-xs-6">
+                    <form class="form-horizontal">
+                        <div class="row">
+                            <label class="control-label col-sm-6">Heating:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: offer().heatingDescription"></p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Washer:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().washingMachine -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().washingMachine -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Dryer:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().dryer -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().dryer -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Television:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: offer().television"></p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Telephone:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().telephone -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().telephone -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">WLAN:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().wlan -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().wlan -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">LAN:</label>
+                            <div class="col-sm-6">
+                                <!-- ko if: offer().lan -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                                <!-- ko ifnot: offer().lan -->
+                                <p class="form-control-static"><span class="glyphicon glyphicon-remove error-text" aria-hidden="true"></span></p>
+                                <!-- /ko -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="control-label col-sm-6">Internet Speed:</label>
+                            <div class="col-sm-6">
+                                <p class="form-control-static bold-text" data-bind="text: offer().internetSpeed + ' MBit/s'"></p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><br>
+
+            <div data-bind="if: showReviews">
+                <div class="row">
+                    <div class="col-md-12">
+                        <legend>Customer Reviews</legend>
+                    </div>
+                </div>
+                <div class="col-md-12" data-bind="foreach: { data: reviews, as: 'review'}">
+                    <div class="row" data-bind="value: review.rating">
+                        <div class="bs-glyphicons form-control-static">
+                            <span class="bs-glyphicons-list">
+							<span data-bind="css: { 'hidden' : review.rating < 1}" class="glyphicon glyphicon-star gold-text"></span>
+                            <span data-bind="css: { 'hidden' : review.rating < 2}" class="glyphicon glyphicon-star gold-text"></span>
+                            <span data-bind="css: { 'hidden' : review.rating < 3}" class="glyphicon glyphicon-star gold-text"></span>
+                            <span data-bind="css: { 'hidden' : review.rating < 4}" class="glyphicon glyphicon-star gold-text"></span>
+                            <span data-bind="css: { 'hidden' : review.rating < 5}" class="glyphicon glyphicon-star gold-text"></span>
+                            <span data-bind="css: { 'hidden' : review.rating % 1 == 0 || review.rating == 0 }" class="glyphicon glyphicon-star half gold-text"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="row">
+                                <label class="control-label review-name" data-bind="text: review.title"></label>
+                            </div>
+                            <div class="row">
+                                <label class="control-label grey-text" data-bind="text: review.creationDate"><small></small></label>
+                            </div>
+                            <div class="row">
+                                <label data-bind="text: review.comment"></label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="profilePicture-container-medium">
+                                    <img data-bind="attr:{ src: review.user.profilePicture}" class="img-responsive profilePicture-img" alt="Profilepicture">
+                                </div>
+                            </div>
+                            <div class="row centric">
+                                <span class="review-name" data-bind="text: review.user.firstName"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <select id="newReviewRating" class="gold-text form-control">
+                                <option value="5" selected>&#9733;&#9733;&#9733;&#9733;&#9733;</option>
+                                <option value="4">&#9733;&#9733;&#9733;&#9733;</option>
+                                <option value="3">&#9733;&#9733;&#9733;</option>
+                                <option value="2">&#9733;&#9733;</option>
+                                <option value="1">&#9733;</option>
+                            </select>
+                            </div>
+                            <div class="col-md-8">
+                                <input id="newReviewTitle" class="form-control" placeholder="Review Title" />
+                            </div>
+                        </div>
+                        <div class="row top-spacing">
+                            <div class="col-md-12">
+                                <textarea id="newReviewComment" class="form-control" rows="3" placeholder="Review comment"></textarea>
+                            </div>
+                        </div>
+                        <div class="row centric">
+                            <button data-bind="click: sendReview" type="button" class="btn btn-primary">Send Review</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- END showReviews -->
+        </div>
+        <!-- END is authenticated -->
+        <div data-bind="ifnot: isAuthenticated">
+            <div class="row">
+                <div class="col-md-12">
+                    <legend>To See All Details ...</legend>
+                </div>
+            </div>
+            <div class="row centric top-spacing">
+                <div class="col-md-12">
+                    <a type="button" href="javascript: void(0)" data-toggle="modal" data-target="#signUpModalDialog" class="btn btn-template-main">Sign Up</a>
+                    <a type="button" href="javascript: void(0)" data-toggle="modal" data-target="#signInModalDialog" class="btn btn-template-main">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /container -->
+</section>

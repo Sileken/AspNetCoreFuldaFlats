@@ -1,0 +1,667 @@
+<!--************************************************************
+ * File:            newOfferBar.component.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         13.12.2016
+ * Description:     Knockout Template for new offer bar.
+ ************************************************************-->
+<section id="new-offer-wizard">
+    <div class="container">
+        <div class="col-sm-12">
+            <div data-bind="css: { 'hidden': !offerCreationError() }" class="hidden alert alert-danger">
+                <strong>Internal Error:</strong> Failed to create a new offer. Please try it again later.
+            </div>
+            <div data-bind="css: { 'hidden': !offerLandlordIsNotCurrentUser() }" class="hidden alert alert-danger">
+                <strong>Internal Error:</strong> Current user and offer landlord are not the same. Please try it again later.
+            </div>
+            <div data-bind="css: { 'hidden': !currentUserIsNotALandlord() }" class="hidden alert alert-danger">
+                <strong>Access Denied:</strong> Your are not a landlord.
+            </div>
+            <div data-bind="css: { 'hidden': !(offerUpdatingError() && offerUpdatingErrorMessage()) }" class="alert alert-danger">
+                <span data-bind="text: offerUpdatingErrorMessage"></span>
+            </div>
+            <div data-bind="css: { 'hidden': !(offerLoadingError() || offerTypesLoadingError() || offerTagsLoadingError()) }" class="hidden alert alert-danger">
+                <strong>Internal Error:</strong> Please try it again later.
+            </div>
+            <div data-bind="css: { 'hidden': !(offerUpdatingError() && !offerUpdatingErrorMessage()) }" class="hidden alert alert-danger">
+                <strong>Updating Error:</strong> Please try it again.
+            </div>
+            <div data-bind="css: { 'hidden': (offerLoadingError() || offerTypesLoadingError() || offerTagsLoadingError() || currentUserIsNotALandlord() || offerLandlordIsNotCurrentUser() || offerCreationError()) }"
+                class="hidden tabs">
+                <ul class="nav nav-pills nav-justified">
+                    <li data-bind="click: goNextStep" class="active"><a href="#tab1" data-toggle="tab">Step 1</a></li>
+                    <li data-bind="click: goNextStep, css: { 'disabled': !isTab1Valid() || isTab1Invalid() }" class="disabled"><a data-bind="attr: { 'data-toggle': !isTab1Valid() || isTab1Invalid() ? '' : 'tab' }" href="#tab2">Step 2</a></li>
+                    <li data-bind="click: goNextStep, css: { 'disabled': !isTab2Valid() || isTab1Invalid() || isTab2Invalid() }" class="disabled"><a data-bind="attr: { 'data-toggle': !isTab2Valid() || isTab1Invalid() || isTab2Invalid() ? '' : 'tab' }"
+                            href="#tab3">Step 3</a></li>
+                    <li data-bind="click: goNextStep, css: { 'disabled': !isTab3Valid() || isTab1Invalid() || isTab2Invalid() || isTab3Invalid() }"
+                        class="disabled"><a data-bind="attr: { 'data-toggle': !isTab3Valid() || isTab1Invalid() || isTab2Invalid() || isTab3Invalid() ? '' : 'tab' }"
+                            href="#tab4">Step 4</a></li>
+                    <li data-bind="click: goNextStep, css: { 'disabled': !isTab4Valid() || isTab1Invalid() || isTab2Invalid() || isTab3Invalid() || isTab4Invalid() }"
+                        class="disabled"><a data-bind="attr: { 'data-toggle': !isTab4Valid() || isTab1Invalid() || isTab2Invalid() || isTab3Invalid()  || isTab4Invalid() ? '' : 'tab' }"
+                            href="#tab5">Step 5</a></li>
+                </ul>
+                <div class="tab-content tab-content-inverse">
+                    <!-- tab 1 -->
+                    <div class="tab-pane active text-center" id="tab1">
+                        <form class="form-horizontal">
+                            <fieldset>
+                                <legend class="clearfix">
+                                    <div class="col-xs-12 text-left">
+                                        General Information
+                                    </div>
+                                </legend>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="offerType" class="control-label col-sm-4">Offer Type:</label>
+                                            <div class="col-sm-8">
+                                                <select data-bind="options: offerTypes, textInput: offer().offerType, optionsCaption: 'Choose Offer Type', optionsAfterRender: optionsAfterRender,
+                                                css: { valid: validOfferType() && !invalidOfferType(), inValid: invalidOfferType() && offerUpdatingErrorMessage() }"
+                                                    class="form-control" id="offerType"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="offerActive" class="control-label col-sm-4">Status:</label>
+                                            <div class="col-sm-8">
+                                                <input data-bind="bootstrapSwitch: tempOfferStatus, bootstrapSwitchOptions: { onText: 'Active', onColor: 'primary', offColor: 'danger', offText: 'Inactive', animate: true, size: 'small' }"
+                                                    type="checkbox" id="offerActive" placeholder="Active">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label for="offerTags" class="control-label col-sm-2">Offer Tags:</label>
+                                            <div class="col-sm-10">
+                                                <select data-bind="options: offerTags, selectedOptions: offer().tags, multiselect: { includeSelectAllOption: true, disableIfEmpty: true, buttonWidth: '100%', numberDisplayed: 20, nonSelectedText: 'Choose Offer Tags' },
+                                                css: { valid: validTags() && !invalidTags(), inValid: invalidTags() && offerUpdatingErrorMessage() }"
+                                                    multiple="multiple" class="form-control" id="offerTags"></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br />
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label for="offerTitle" class="control-label col-sm-2">Offer Title:</label>
+                                            <div class="col-sm-10">
+                                                <input data-bind="textInput: offer().title, css: { valid: validTitle() && !invalidTitle(), inValid: invalidTitle() && offerUpdatingErrorMessage() }"
+                                                    type="text" class="form-control" id="offerTitle" placeholder="Offer Title">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br />
+                                <!-- Offer Type != Party || Couch -->
+                                <div data-bind="fadeVisible: offer().offerType() && (offer().offerType().toLowerCase() !== 'COUCH'.toLowerCase() && offer().offerType().toLowerCase() !== 'PARTY'.toLowerCase())">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerSize" class="control-label col-sm-4">Size:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().size, css: { valid: validSize() && !invalidSize(), inValid: invalidSize() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerSize" placeholder="Size">
+                                                        <div class="input-group-addon">m²</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerRooms" class="control-label col-sm-4">Rooms:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="textInput: offer().rooms, css: { valid: validRooms() && !invalidRooms(), inValid: invalidRooms() && offerUpdatingErrorMessage() }"
+                                                        type="number" class="form-control" id="offerRooms" placeholder="Rooms">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerRent" class="control-label col-sm-4">Rent:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().rent, css: { valid: validRent() && !invalidRent(), inValid: invalidRent() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerRent" placeholder="Rent">
+                                                        <div class="input-group-addon">€</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerRentType" class="control-label col-sm-4">Rent Type:</label>
+                                                <div class="col-sm-8">
+                                                    <select data-bind="options: offerRentTypes, textInput: offer().rentType, optionsCaption: 'Choose Rent Type', optionsAfterRender: optionsAfterRender, 
+                                                css: { valid: validRentType() && !invalidRentType(), inValid: invalidRentType() && offerUpdatingErrorMessage() }"
+                                                        class="form-control" id="offerRentType"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerSideCosts" class="control-label col-sm-4">Side Costs:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().sideCosts, css: { valid: validSideCosts() && !invalidSideCosts(), inValid: invalidSideCosts() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerSideCosts" placeholder="Side Costs">
+                                                        <div class="input-group-addon">€</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerPriceType" class="control-label col-sm-4">Price Type:</label>
+                                                <div class="col-sm-8">
+                                                    <select data-bind="options: offerPriceTypes, textInput: offer().priceType, optionsCaption: 'Choose Price Type', optionsAfterRender: optionsAfterRender,
+                                                css: { valid: validPriceType() && !invalidPriceType(), inValid: invalidPriceType() && offerUpdatingErrorMessage() }"
+                                                        class="form-control" id="offerPriceType"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerFullPrice" class="control-label col-sm-4">Full Price:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input disabled data-bind="textInput: offerFullPrice" type="number" class="form-control" id="offerFullPrice" placeholder="0">
+                                                        <div class="input-group-addon">€</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerDeposit" class="control-label col-sm-4">Deposit:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().deposit, css: { valid: validDeposit() && !invalidDeposit(), inValid: invalidDeposit() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerDeposit" placeholder="Deposit">
+                                                        <div class="input-group-addon">€</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerCommission" class="control-label col-sm-4">Commission:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().commission, css: { valid: validCommission() && !invalidCommission(), inValid: invalidCommission() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerCommission" placeholder="Commission">
+                                                        <div class="input-group-addon">€</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Offer Type == Party || Couch -->
+                                <div data-bind="fadeVisible: offer().offerType() && (offer().offerType().toLowerCase() === 'COUCH'.toLowerCase() || offer().offerType().toLowerCase() === 'PARTY'.toLowerCase())">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerSize" class="control-label col-sm-4">Size:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().size, css: { valid: validSize() && !invalidSize(), inValid: invalidSize() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerSize" placeholder="Size">
+                                                        <div class="input-group-addon">m²</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerRent" class="control-label col-sm-4">Rent:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().rent, css: { valid: validRent() && !invalidRent(), inValid: invalidRent() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerRent" placeholder="Rent">
+                                                        <div class="input-group-addon">€</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerDeposit" class="control-label col-sm-4">Deposit:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().deposit, css: { valid: validDeposit() && !invalidDeposit(), inValid: invalidDeposit() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerDeposit" placeholder="Deposit">
+                                                        <div class="input-group-addon">€</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <br />
+                            <div class="row">
+                                <div class="col-xs-2">
+                                    <a data-bind="click: cancelOfferCreation" type="button" class="btn btn-danger" aria-label="Left Align">
+                                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                    </a>
+                                </div>
+                                <div class="col-xs-8">
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 20%;">
+                                            20%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-2">
+                                    <button data-bind="click: goNextStep, enable: isTab1Valid() && !isTab1Invalid()" next-tab="#tab2" type="button" data-toggle="tab"
+                                        class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.tab -->
+                    <!-- tab 2 -->
+                    <div class="tab-pane text-center" id="tab2">
+                        <form class="form-horizontal">
+                            <fieldset>
+                                <legend class="clearfix">
+                                    <div class="col-xs-12 text-left">
+                                        Detail Information
+                                    </div>
+                                </legend>
+                                <div class="col-sm-12 center-block">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerFurnished" class="control-label col-sm-4">Furnished:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().furnished, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerFurnished"
+                                                        placeholder="Furnished">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerKitchenDescription" class="control-label col-sm-4">Kitchen:</label>
+                                                <div class="col-sm-8">
+                                                    <select data-bind="options: kitchenDescriptions, textInput: offer().kitchenDescription, optionsCaption: 'Choose Description', optionsAfterRender: optionsAfterRender,
+                                                    css: { valid: validKitchenDescription() && !invalidKitchenDescription(), inValid: invalidKitchenDescription() && offerUpdatingErrorMessage() }"
+                                                        class="form-control" id="offerKitchenDescription"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerBathroomNumber" class="control-label col-sm-4">Bathroom Numbers:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="textInput: offer().bathroomNumber, css: { valid: validBathroomNumber() && !invalidBathroomNumbers(), inValid: invalidBathroomNumbers() && offerUpdatingErrorMessage() }"
+                                                        type="number" class="form-control" id="offerBathroomNumber" placeholder="Bathroom Numbers">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerBathroomDescription" class="control-label col-sm-4">Bathroom:</label>
+                                                <div class="col-sm-8">
+                                                    <select data-bind="options: bathroomDescriptions, textInput: offer().bathroomDescription, optionsCaption: 'Choose Description', optionsAfterRender: optionsAfterRender,
+                                                    css: { valid: validBathroomDescription() && !invalidBathroomDescription(), inValid: invalidBathroomDescription() && offerUpdatingErrorMessage() }"
+                                                        class="form-control" id="offerBathroomDescription"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerCellar" class="control-label col-sm-4">Cellar:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().cellar, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerCellar"
+                                                        placeholder="Cellar">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerParking" class="control-label col-sm-4">Parking:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().parking, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerParking"
+                                                        placeholder="Parking">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerElevator" class="control-label col-sm-4">Elevator:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().elevator, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerElevator"
+                                                        placeholder="Elevator">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerAccessability" class="control-label col-sm-4">Accessability:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().accessability, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerAccessability"
+                                                        placeholder="Accessability">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerWlan" class="control-label col-sm-4">WLAN:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().wlan, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerWlan"
+                                                        placeholder="Wlan">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerLan" class="control-label col-sm-4">LAN:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().lan, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerLan"
+                                                        placeholder="Lan">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerInternetSpeed" class="control-label col-sm-4">Internet Speed:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input data-bind="textInput: offer().internetSpeed, css: { valid: validInternetSpeed() && !invalidInternetSpeed(), inValid: invalidInternetSpeed() && offerUpdatingErrorMessage() }"
+                                                            type="number" class="form-control" id="offerInternetSpeed" placeholder="Internet Speed">
+                                                        <div class="input-group-addon">MBit/s</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerHeatingDescription" class="control-label col-sm-4">Heating:</label>
+                                                <div class="col-sm-8">
+                                                    <select data-bind="options: offerHeatingDescriptions, textInput: offer().heatingDescription, optionsCaption: 'Choose Description', optionsAfterRender: optionsAfterRender,
+                                                    css: { valid: validHeatingDescription() && !invalidHeatingDescription(), inValid: invalidHeatingDescription() && offerUpdatingErrorMessage() }"
+                                                        class="form-control" id="offerHeatingDescription"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerTelevision" class="control-label col-sm-4">Television:</label>
+                                                <div class="col-sm-8">
+                                                    <select data-bind="options: televisionDescriptions, textInput: offer().television, optionsCaption: 'Choose Description', optionsAfterRender: optionsAfterRender,
+                                                    css: { valid: validTelevision() && !invalidTelevision(), inValid: invalidTelevision() && offerUpdatingErrorMessage() }"
+                                                        class="form-control" id="offerTelevision"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerTelephone" class="control-label col-sm-4">Telephone:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().telephone, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerTelephone"
+                                                        placeholder="Telephone">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerDryer" class="control-label col-sm-4">Dryer:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().dryer, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerDryer"
+                                                        placeholder="Dryer">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerWashingMachine" class="control-label col-sm-4">Washer:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().washingMachine, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox"
+                                                        id="offerWashingMachine" placeholder="WashingMachine">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <label for="offerPets" class="control-label col-sm-4">Pets:</label>
+                                                <div class="col-sm-8">
+                                                    <input data-bind="bootstrapSwitch: offer().pets, bootstrapSwitchOptions: defaultSwitchOptions" type="checkbox" id="offerPets"
+                                                        placeholder="Pets">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <br /><br />
+                            <div class="row">
+                                <div class="col-xs-2">
+                                    <button data-bind="click: goNextStep" next-tab="#tab1" type="button" data-toggle="tab" class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="col-xs-8">
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 40%;">
+                                            40%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-2">
+                                    <button data-bind="click: goNextStep, enable: isTab2Valid() && !isTab2Invalid()" next-tab="#tab3" type="button" data-toggle="tab"
+                                        class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.tab -->
+                    <!-- tab 3 -->
+                    <div class="tab-pane text-center" id="tab3">
+                        <form class="form-horizontal">
+                            <fieldset>
+                                <legend class="clearfix">
+                                    <div class="col-xs-12 text-left">
+                                        Location
+                                    </div>
+                                </legend>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="offerStreet" class="control-label col-sm-5">Street:</label>
+                                        <div class="col-sm-7">
+                                            <input data-bind="textInput: offer().street, css: { valid: validStreet() && !invalidStreet(), inValid: invalidStreet() && offerUpdatingErrorMessage() }"
+                                                type="text" class="form-control" id="offerStreet" placeholder="Steet">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="offerHouseNumber" class="control-label col-sm-5">House Number:</label>
+                                        <div class="col-sm-7">
+                                            <input data-bind="textInput: offer().houseNumber, css: { valid: validHouseNumber() && !invalidHouseNumber(), inValid: invalidHouseNumber() && offerUpdatingErrorMessage() }"
+                                                type="text" class="form-control" id="offerHouseNumber" placeholder="House Number">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="offerFloor" class="control-label col-sm-5">Floor:</label>
+                                        <div class="col-sm-7">
+                                            <input data-bind="textInput: offer().floor, css: { valid: validFloor() && !invalidFloor(), inValid: invalidFloor() && offerUpdatingErrorMessage() }"
+                                                type="number" class="form-control" id="offerFloor" placeholder="Floor">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="offerZipCode" class="control-label col-sm-5">Zip Code:</label>
+                                        <div class="col-sm-7">
+                                            <input data-bind="textInput: offer().zipCode, css: { valid: validZipCode() && !invalidZipCode(), inValid: invalidZipCode() && offerUpdatingErrorMessage() }"
+                                                type="number" class="form-control" id="offerZipCode" placeholder="Zip Code">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="offerCity" class="control-label col-sm-5">City:</label>
+                                        <div class="col-sm-7">
+                                            <input data-bind="textInput: offer().city, css: { valid: validCity() && !invalidCity(), inValid: invalidCity() && offerUpdatingErrorMessage() }"
+                                                type="text" class="form-control" id="offerCity" placeholder="City">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 center-block">
+                                    <!-- map -->
+                                </div>
+                            </fieldset>
+                            <br><br>
+                            <div class="row">
+                                <div class="col-xs-2">
+                                    <button data-bind="click: goNextStep" next-tab="#tab2" type="button" data-toggle="tab" class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="col-xs-8">
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
+                                            60%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-2">
+                                    <button data-bind="click: goNextStep, enable: isTab3Valid() && !isTab3Invalid()" next-tab="#tab4" type="button" data-toggle="tab"
+                                        class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.tab -->
+                    <!-- tab 4 -->
+                    <div class="tab-pane text-center" id="tab4">
+                        <form class="form-horizontal">
+                            <fieldset>
+                                <legend class="clearfix">
+                                    <div class="col-xs-12 text-left">
+                                        Description
+                                    </div>
+                                </legend>
+                                <div class="col-sm-12 center-block">
+                                    <div class="form-group">
+                                        <textarea data-bind="textInput: offer().description, css: { valid: validDescription() && !invalidDescription(), inValid: invalidDescription() && offerUpdatingErrorMessage() }"
+                                            class="form-control" rows="18" id="offerDescription"></textarea>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <br />
+                            <div class="row">
+                                <div class="col-xs-2">
+                                    <button data-bind="click: goNextStep" next-tab="#tab3" type="button" data-toggle="tab" class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="col-xs-8">
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width: 80%;">
+                                            80%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-2">
+                                    <button data-bind="click: goNextStep, enable: isTab4Valid() && !isTab4Invalid()" next-tab="#tab5" type="button" data-toggle="tab"
+                                        class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.tab -->
+                    <!-- tab 5 -->
+                    <div class="tab-pane text-center" id="tab5">
+                        <fieldset>
+                            <legend class="clearfix">
+                                <div class="col-xs-6 text-left">
+                                    Add Pictures and Video
+                                </div>
+                                <div class="col-xs-6 text-right">
+                                    <button id="offerFileUploadButton" data-bind="click: bindFileUploadModalEvents" data-toggle="modal" data-target="#fileUploaderModal"
+                                        type="button" class="btn btn-sm btn-template-main" aria-label="Right Align">
+												<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> Edit Media
+                                        </button>
+                                </div>
+                            </legend>
+                            <div id="uploaded-files" data-bind="foreach: { data: offer().mediaObjects(), as: 'media' }" class="row">
+                                <div data-bind="css: {'hidden': media.thumbnailUrl && media.thumbnailUrl.indexOf('dummy.png') === (media.thumbnailUrl.length - 9) }"
+                                    class="col-sm-3">
+                                    <a class="image" data-bind="attr: { href: media.thumbnailUrl }" data-lightbox="mediaObjectsLightbox">
+                                            <img data-bind="attr: { src: media.thumbnailUrl, alt: 'Uploaded Image ' + (parseInt($index()) + 1) }, css: { 'img-row-2': parseInt($index()) > 3 }"
+                                                class="mediaObject-img img-responsive">
+                                        </a>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row">
+                                <div class="col-xs-2">
+                                    <a data-bind="click: goNextStep" next-tab="#tab4" type="button" data-toggle="tab" class="btn btn-template-main" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                    </a>
+                                </div>
+                                <div class="col-xs-8">
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">
+                                            100%
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-2">
+                                    <a data-bind="click: finishOfferCreation" type="button" data-toggle="tab" class="btn btn-success" aria-label="Right Align">
+                                        <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+                                    </a>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <!-- /.tab -->
+                </div>
+            </div>
+            <!-- /.tabs -->
+        </div>
+        <div class="col-sm-2"></div>
+    </div>
+</section>
+<div data-bind='component: { name: "file-uploader", params: { offerId: $data.offer().id } }'></div>

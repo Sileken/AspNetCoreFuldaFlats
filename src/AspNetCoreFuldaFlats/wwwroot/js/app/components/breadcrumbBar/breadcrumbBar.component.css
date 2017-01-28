@@ -1,0 +1,27 @@
+/************************************************************
+ * File:            breadcrumbBar.component.css
+ * Author:          Patrick Hasenauer
+ * LastMod:         13.12.2016
+ * Description:     Custom CSS for for breadcrumb bar.
+ ************************************************************/
+#heading-breadcrumbs-container{
+    background: url('/img/texture-bw.png') center center repeat;
+}
+
+#heading-breadcrumbs-container .dark-mask {
+    background: #467fbf;
+    opacity: 0.5;
+    padding: 5px;
+}
+
+#heading-breadcrumbs .breadcrumb > li + li:before{
+    content: ">\00a0";
+    color: white;
+}
+
+
+#heading-breadcrumbs h1,
+#heading-breadcrumbs a,
+#heading-breadcrumbs {
+    color: white;
+}

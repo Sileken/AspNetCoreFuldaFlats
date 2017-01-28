@@ -1,0 +1,84 @@
+<!-- ************************************************************
+ * File:            navigationBar.component.html
+ * Author:          Patrick Hasenauer, Jonas Kleinlauf
+ * LastMod:         08.12.2016
+ * Description:     Knockout Template for navigation bar.
+ ************************************************************ -->
+<div class="navbar-affixed-top" data-spy="affix" data-offset-top="200">
+	<div class="navbar navbar-default navbar-light yamm" role="navigation" id="navbar">
+		<div class="container">
+			<div class="navbar-header">
+				<!-- ko if: homePageInfo && logoUrl && domain -->
+				<a class="navbar-brand home" data-bind="attr: { href: homePageInfo().url }">
+					<img data-bind="attr: { src: logoUrl}" alt="website logo" class="logo">
+					<span class="sr-only" data-bind="text: domain"></span>
+					<span class="sr-only"> - go to homepage</span>
+				</a>
+				<!-- /ko -->
+				<div class="navbar-buttons">
+					<button type="button" class="navbar-toggle btn-template-main" data-toggle="collapse" data-target="#navigation">
+						<span class="sr-only">Toggle navigation</span>
+						<i class="fa fa-align-justify"></i>
+					</button>
+				</div>
+			</div>
+			<div class="navbar-collapse collapse" id="navigation">
+				<!-- ko if: currentUser().isAuthenticated && currentUser().userData && currentUser().userData.profilePicture-->
+				<div class="nav-profile-image-container navbar-right">
+					<div class="profilePicture-container-small">
+						<img data-bind="attr: { src: currentUser().userData.profilePicture }" alt="profile image" class="img-responsive profilePicture-img">
+					</div>
+				</div>
+				<!-- /ko -->
+				<ul class="nav navbar-nav navbar-right">
+					<!-- ko if: currentUser().isAuthenticated -->
+					<!-- ko if: myProfilePageInfo -->
+					<li class="inactive navmenuentry">
+						<a data-bind="attr: { href: myProfilePageInfo().url }, text: myProfilePageInfo().title"></a>
+					</li>
+					<!-- /ko -->
+					<!-- ko if: becomeLandlordPageInfo && currentUser().userData && currentUser().userData.type === userTypes.normal -->
+					<li class="inactive navmenuentry">
+						<a data-bind="attr: { href: becomeLandlordPageInfo().url }, text: becomeLandlordPageInfo().title"></a>
+					</li>
+					<!-- /ko -->
+					<!-- ko if: newOfferPageInfo && currentUser().userData && currentUser().userData.type === userTypes.landlord-->
+					<li class="inactive navmenuentry">
+						<a href="javascript:void(0)" data-bind="attr: { href: newOfferPageInfo().url }, text: newOfferPageInfo().title"></a>
+					</li>
+					<!-- /ko -->
+					<li class="inactive navmenuentry">
+						<a href="javascript:void(0)" data-bind="click: signOut">Sign Out</a>
+					</li>
+					<!-- /ko -->
+					<!-- ko ifnot: currentUser().isAuthenticated -->
+					<li class="inactive navmenuentry">
+						<a type="button" href="javascript: void(0)" data-toggle="modal" data-target="#signInModalDialog">Sign In</a>
+					</li>
+					<li class="inactive navmenuentry">
+						<a type="button" href="javascript: void(0)" data-toggle="modal" data-target="#signUpModalDialog">Sign Up</a>
+					</li>
+					<!-- /ko -->
+					<!-- ko if: legalDisclosurePageInfo -->
+					<li class="inactive visible-xs navmenuentry">
+						<a data-bind="attr: { href: legalDisclosurePageInfo().url }, text: legalDisclosurePageInfo().title"></a>
+					</li>
+					<!-- /ko -->
+					<li class="inactive visible-xs navmenuentry">
+						<a type="button" href="javascript: void(0)" data-toggle="modal" data-target="#contactModalDialog">Contact</a>
+					</li>
+					<!-- ko if: termsOfUsePageInfo -->
+					<li class="inactive visible-xs navmenuentry">
+						<a data-bind="attr: { href: termsOfUsePageInfo().url }, text: termsOfUsePageInfo().title"></a>
+					</li>
+					<!-- /ko -->
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div data-bind='component: { name: "sign-in", params: signInDialogParameter }'></div>
+<div data-bind='component: { name: "sign-up", params: signUpDialogParameter }'></div>
+<div data-bind='component: { name: "error" }'></div>
+<div data-bind='component: { name: "contact", params: contactDialogParamter }'></div>

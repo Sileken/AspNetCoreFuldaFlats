@@ -1,0 +1,84 @@
+<!-- ************************************************************
+ * File:            legalDisclosureBar.component.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         07.12.2016
+ * Description:     Knockout Template for legal disclosure  bar.
+ ************************************************************-->
+<section id="content">
+    <div class="container">
+        <div class="col-md-12">
+            <div class="row">
+                <p>Information in accordance with section 5 TMG</p>
+                <p>
+                    <!-- ko if: organisationName -->
+                    <strong data-bind="text: organisationName"></strong><br />
+                    <!-- /ko -->
+                    <span>
+                    <!-- ko if: street -->
+                    <span data-bind="text: street"></span>
+                    <!-- /ko -->
+                    <!-- ko if: housenumber -->
+                    <span data-bind="text: housenumber"></span>
+                    <!-- /ko -->
+                    </span><br />
+                    <span>
+                    <!-- ko if: zipCode -->
+                    <span data-bind="text: zipCode"></span>
+                    <!-- /ko -->
+                    <!-- ko if: city -->
+                    <span> </span>
+                    <span data-bind="text: city"></span>
+                    <!-- /ko -->
+                    </span><br />
+                    <!-- ko if: country -->
+                    <span data-bind="text: country"></span>
+                    <!-- /ko -->
+                </p>
+            </div>
+            <div class="row">
+                <h3>Contact</h3>
+                <div>
+                    <!-- ko if: phone -->
+                    <span>Phone Number: <a data-bind="text: phone, attr: { href: 'tel:' + phone() }"></a></span><br />
+                    <!-- /ko -->
+                    <!-- ko if: email -->
+                    <span>E-Mail: <a data-bind="text: email, attr: { href: 'mailto:' + email() }"></a></span>
+                    <!-- /ko -->
+                </div>
+            </div>
+            <div class="row">
+                <h3>Disclaimer</h3>
+                <div>
+                    <div>
+                        <h5>Accountability for content</h5>
+                        <p>The contents of our pages have been created with the utmost care. However, we cannot guarantee the
+                            contents' accuracy, completeness or topicality. According to statutory provisions, we are furthermore
+                            responsible for our own content on these web pages. In this context, please note that we are
+                            accordingly not obliged to monitor merely the transmitted or saved information of third parties,
+                            or investigate circumstances pointing to illegal activity. Our obligations to remove or block
+                            the use of information under generally applicable laws remain unaffected by this as per &sect;&sect;
+                            8 to 10 of the Telemedia Act (TMG).</p>
+                    </div>
+                    <div>
+                        <h5>Accountability for links</h5>
+                        <p>Responsibility for the content of external links (to web pages of third parties) lies solely with
+                            the operators of the linked pages. No violations were evident to us at the time of linking. Should
+                            any legal infringement become known to us, we will remove the respective link immediately.</p>
+                    </div>
+                    <div>
+                        <h5>Copyright</h5>
+                        <p>Our web pages and their contents are subject to German copyright law. Unless expressly permitted
+                            by law (&sect; 44a et seq. of the copyright law), every form of utilizing, reproducing or processing
+                            works subject to copyright protection on our web pages requires the prior consent of the respective
+                            owner of the rights. Individual reproductions of a work are allowed only for private use, so
+                            must not serve either directly or indirectly for earnings. Unauthorized utilization of copyrighted
+                            works is punishable (&sect; 106 of the copyright law).</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <i>Quelle: </i><a href="http://www.muster-vorlagen.net" target="_blank">Muster Legal Disclosure – www.Muster-Vorlagen.net</a>
+            </div>
+        </div>
+    </div>
+</section>

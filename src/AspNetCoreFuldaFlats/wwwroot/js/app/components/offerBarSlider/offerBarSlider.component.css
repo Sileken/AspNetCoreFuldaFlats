@@ -1,0 +1,49 @@
+/************************************************************
+ * File:            offerBarSlider.component.css
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for offer bar slider.
+ ************************************************************/
+.offer-brief-details .offer-brief-details-detail {
+  padding: 0px 10px;
+}
+
+.offer-brief-details .offer-brief-details-detail > div {
+  padding: 10px 0px;
+}
+
+@media (min-width: 1200px) {
+  .offer-brief-details .offer-brief-details-detail > div:first-of-type {
+    border-right: solid 1px #e6e6e6;
+  }
+  .offer-brief-details .offer-brief-details-detail > div:last-of-type {
+    border-left: solid 1px #e6e6e6;
+  }
+}
+
+@media (max-width: 1200px) {
+  .offer-brief-details .offer-brief-details-detail > div:first-of-type {
+    border-bottom: solid 1px #e6e6e6;
+  }
+  .offer-brief-details .offer-brief-details-detail > div:last-of-type {
+    border-top: solid 1px #e6e6e6;
+  }
+}
+
+.offer-brief-details .offer-brief-details-detail .offer-brief-details-detail-value{
+  font-size: 18px;
+}
+
+.offer-brief-details .offer-brief-details-detail .offer-brief-details-detail-key{
+  color: #999999;
+}
+
+.price-wrapper .price {
+  display: inline-block;
+}
+.price-wrapper .rate {
+  display: inline-block;
+  vertical-align: top;
+  line-height: 11px;
+  font-size: 11px;
+}

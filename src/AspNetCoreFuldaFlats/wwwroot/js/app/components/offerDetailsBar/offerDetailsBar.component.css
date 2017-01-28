@@ -1,0 +1,108 @@
+/************************************************************
+ * File:            offerDetailsBar.component.css
+ * Author:          Jonas Kleinkauf, Martin Herbener
+ * LastMod:         05.12.2016
+ * Description:     Custom CSS for offer details bar.
+ ************************************************************/
+/* Special component css here and general css in main.css */
+
+.offer-details-bar .glyphicon-ok {
+    color: green
+}
+
+.mediaObject-carousel{
+    height: 500px;
+    background-color: #eeeeee;
+}
+
+.carousel-indicators li {
+    border: 1px solid #ffffff;
+}
+
+.carousel-indicators .active {
+    background-color: #467fbf;
+}
+
+.mediaObject-container{
+  height: 300px;
+  overflow: hidden;
+  text-align: center;
+}
+
+@media (min-width: 992px) {
+  .mediaObject-container {
+      height: 500px;
+  }
+}
+
+.mediaObject-img{
+  height: 100%;
+  max-width: initial;
+}
+
+/*
+.carousel-control.left {
+    background-image: -webkit-linear-gradient(left,rgba(70,127,191,.5) 0,rgba(0,0,0,.0001) 100%);
+    background-image: -o-linear-gradient(left,rgba(70,127,191,.5) 0,rgba(0,0,0,.0001) 100%);
+    background-image: -webkit-gradient(linear,left top,right top,from(rgba(70,127,191,.5)),to(rgba(0,0,0,.0001)));
+    background-image: linear-gradient(to right,rgba(70,127,191,.5) 0,rgba(0,0,0,.0001) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#80467fbf', endColorstr='#00000000', GradientType=1);
+    background-repeat: repeat-x;
+}
+
+.carousel-control.right {
+    right: 0;
+    left: auto;
+    background-image: -webkit-linear-gradient(left,rgba(0,0,0,.0001) 0,rgba(70,127,191,.5) 100%);
+    background-image: -o-linear-gradient(left,rgba(0,0,0,.0001) 0,rgba(70,127,191,.5) 100%);
+    background-image: -webkit-gradient(linear,left top,right top,from(rgba(0,0,0,.0001)),to(rgba(70,127,191,.5)));
+    background-image: linear-gradient(to right,rgba(0,0,0,.0001) 0,rgba(70,127,191,.5) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#80467fbf', GradientType=1);
+    background-repeat: repeat-x;
+}
+*/
+
+.carousel-control.left{
+    background-image: none;
+    filter: none;
+}
+
+.carousel-control.right{
+    background-image: none;
+    filter: none;
+}
+
+hr {
+    border:solid #ddd 1px;
+}
+
+.centric{
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.review-name{
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.top-spacing{
+    margin-top: 5px;
+}
+
+.star-spacing{
+    margin-top: 7px;
+}
+
+.location-description{
+    font-size: 2rem;
+}
+
+.detailsMap-container{
+    height: 200px;
+    background-color: #999999;
+}
+
+#detailsMap .marker-popup {
+  width: 250px;
+}

@@ -1,0 +1,99 @@
+<!-- ************************************************************
+ * File:            fileUploaderModal.component.html
+ * Author:          Franz Weidmann
+ * LastMod:         7.12.2016
+ * Description:     HTML file for the fileUploader component
+************************************************************ -->
+<div class="modal fade modal-md" id="fileUploaderModal" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">Image Uploader</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="alert alert-info" role="alert">Please make sure you have the legal rights on images before you upload them.</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-4">
+						<div class="list-group" data-bind="foreach: offerMediaObjectsOnline">
+							<div class="media">
+								<div class="media-left">
+									<img class="media-object" height="75" width="75" data-bind="attr: {src: thumbnailUrl, alt: id}">
+								</div>
+								<div class="media-body">
+									<button class="btn btn-default" data-bind="click: $parent.deleteOnlineMediaObject" title="Delete"><span class="glyphicon glyphicon-trash" aria-hidden="true" ></span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-8">
+						<div class="row">
+							<div class="col-sm-12">
+								<span class="btn btn-default fileinput-button " title="Select multiple Images or Videos">
+									<span class="glyphicon glyphicon-plus"></span>
+									<span>Select multiple files</span>
+									<input type="file" id="mediaObjectFile"  multiple />
+								</span>
+
+								<button class="btn btn-success uploadAllBtn" data-bind="click: $parent.uploadAll" title="Upload all">
+									<span class="glyphicon glyphicon-upload"></span>
+									<span>Upload all</span>
+								</button>
+							</div>
+						</div>
+						</br>
+						<div class="row">
+							<div id="selectedFiles" data-bind="foreach: offerMediaObjectsOffline" >
+								<div class="col-sm-12">
+									<div class="row">
+									<div class="col-sm-8">
+										<div class="col-sm-12 small">
+											<small>Name: <span data-bind="text: name"></span></small>
+										</div>
+										<div class="col-sm-6 small">
+											<small>Type: <span data-bind="text: type"></span></small>
+										</div>
+										<div class="col-sm-6 small">
+											<small>Size: <span data-bind="text: size"></span></small>
+										</div>
+									</div>
+									<div class="col-sm-4">
+										<button class="btn btn-success uploadFileBtn" data-bind="attr: {id:$index}, click: $parent.uploadMediaObject" title="Upload">
+											<span class="glyphicon glyphicon-upload" aria-hidden="true" ></span>
+										</button>
+										<button class="btn btn-danger removeFileBtn" data-bind="attr: {id:$index}, click: $parent.removeOfflineMediaObject" title="Remove">
+											<span class="glyphicon glyphicon-remove" aria-hidden="true" ></span>
+										</button>
+									</div>
+									</div>
+									<div class="alert alert-danger alertFileUpload" data-bind="attr: {id:$index}" role="alert">
+										<!-- ErrorMsg -->
+									</div>
+									<div class="row col-sm-10">
+										<div class="progress progressMediaObjectUpLoad" data-bind="attr: {id:$index}">
+											<span class="progressText" > 0 % </span>
+											<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+											</div>
+										</div>
+									</div>
+								</div>
+								</br>
+								</br>
+								</br>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<div class="text-center">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Finished</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

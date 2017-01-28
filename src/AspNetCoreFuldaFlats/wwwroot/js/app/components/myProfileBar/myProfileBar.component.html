@@ -1,0 +1,304 @@
+<!--************************************************************
+ * File:            myProfileBar.component.html
+ * Author:          Michelle Rothenbuecher, Patrick Hasenauer
+ * LastMod:         11.12.2016
+ * Description:     Knockout Template for my profile bar.
+ ************************************************************-->
+<section style="min-height:700px; margin-top: 2rem">
+	<div class="container" data-bind="with: currentUser">
+		<div class="col-sm-12">
+			<div class="row text-right clearfix">
+				<a href="/pages/editProfileData" type="submit" class="btn btn-template-main btn-margin-bottom">Edit Profile Data</a>
+				<a href="/pages/changePassword" type="submit" class="btn btn-template-main btn-margin-bottom btn-margin-left">Change Password</a>
+			</div>
+			<div class="row">
+				<div class="col-sm-4">
+					<div class="box-image-text">
+						<div class="top">
+							<div class="image">
+								<div class="profilePicture-container-big">
+									<img data-bind="attr:{src: profilePicture}" class="img-responsive profilePicture-img" alt="Profilepicture">
+								</div>
+							</div>
+							<div class="bg"></div>
+							<div class="text">
+								<p class="buttons">
+									<a href="/pages/editProfilePicture" class="btn btn-template-transparent-primary"><i class="fa fa-link"></i>Edit Picture</a>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-8">
+					<form class="form-horizontal">
+						<fieldset class="form-group">
+							<legend>Account Information</legend>
+							<div class="row">
+								<label class="control-label col-sm-2">Account:</label>
+								<div class="col-sm-10">
+									<div data-bind="if: type==2">
+										<p id="accountStatus" class="form-control-static">Landlord</p>
+									</div>
+									<div data-bind="if: type==1">
+										<p id="accountStatus" class="form-control-static">Standard User</p>
+									</div>
+								</div>
+							</div>
+							<div class="row" data-bind="if: type == 2">
+								<label class="control-label col-sm-2">Rating:</label>
+								<div class="col-sm-10">
+									<div class="bs-glyphicons form-control-static">
+										<span class="bs-glyphicons-list">
+										<span data-bind="css: { 'hidden' : averageRating < 1}" class="glyphicon glyphicon-star gold-text"></span>
+										<span data-bind="css: { 'hidden' : averageRating < 2}" class="glyphicon glyphicon-star gold-text"></span>
+										<span data-bind="css: { 'hidden' : averageRating < 3}" class="glyphicon glyphicon-star gold-text"></span>
+										<span data-bind="css: { 'hidden' : averageRating < 4}" class="glyphicon glyphicon-star gold-text"></span>
+										<span data-bind="css: { 'hidden' : averageRating < 5}" class="glyphicon glyphicon-star gold-text"></span>
+										<span data-bind="css: { 'hidden' : averageRating % 1 == 0 || averageRating == 0 }" class="glyphicon glyphicon-star half gold-text"></span>
+										</span>
+									</div>
+								</div>
+							</div>
+						</fieldset>
+						<fieldset class="form-group">
+							<legend>Personal Information</legend>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">First Name:</label>
+								<div class="col-sm-10">
+									<p id="firstName" class="form-control-static" data-bind="text: firstName"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">Last Name:</label>
+								<div class="col-sm-10">
+									<p id="lastName" class="form-control-static" data-bind="text: lastName"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">Gender:</label>
+								<div class="col-sm-10">
+									<p id="gender" class="form-control-static" data-bind="text: gender"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">Birthday:</label>
+								<div class="col-sm-10">
+									<p id="birthday" class="form-control-static" data-bind="text: birthday"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">E-Mail:</label>
+								<div class="col-sm-10">
+									<p id="email" class="form-control-static" data-bind="text: email"></p>
+								</div>
+							</div>
+						</fieldset>
+						<fieldset class="form-group" data-bind="if: $data.type==2">
+							<legend>Contact Information</legend>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">Phone Number:</label>
+								<div class="col-sm-10">
+									<p id="phoneNumber" class="form-control-static" data-bind="text: phoneNumber"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row">
+								<label class="control-label col-sm-2">ZIP Code:</label>
+								<div class="col-sm-10">
+									<p id="zipCode" class="form-control-static" data-bind="text: zipCode"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">City:</label>
+								<div class="col-sm-10">
+									<p id="city" class="form-control-static" data-bind="text: city"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">Street:</label>
+								<div class="col-sm-10">
+									<p id="street" class="form-control-static" data-bind="text: street"></p>
+								</div>
+							</div>
+							<div class="row profile-detail-row-xs">
+								<label class="control-label col-sm-2">House Number:</label>
+								<div class="col-sm-10">
+									<p id="housenumber" class="form-control-static" data-bind="text: houseNumber"></p>
+								</div>
+							</div>
+						</fieldset>
+					</form>
+					<div id="tab-container">
+						<!-- ______________ Tabs ______________ -->
+						<ul class="nav nav-tabs spacer" id="userprofile-tabs">
+							<li class="active"><a data-bind="click: $parent.showTab" href="#favorites">Favorites</a></li>
+							<li><a data-bind="click: $parent.showTab" href="#offers">Offers</a></li>
+						</ul>
+						<div class="tab-content clearfix">
+							<!-- ______________ Favorites ______________ -->
+							<div class="tab-pane active" id="favorites">
+								<div data-bind="if: favorites.length > 0">
+									<div class="col-md-12 resultColumn" data-bind="foreach: { data: favorites, as: 'favorite' }">
+										<div class="panel panel-offer-result">
+											<div class="panel-body">
+												<!-- Hoverable Image -->
+												<div class="offer-brief-detail-1 box-image-text col-md-5">
+													<div class="top">
+														<div class="image thumbnail-container">
+															<img data-bind="attr: { src: favorite.thumbnailUrl }" alt="" class="img-responsive thumbnail-img">
+														</div>
+														<div class="bg"></div>
+														<div class="text">
+															<p class="buttons">
+																<a data-bind="attr: { href: favorite.detailsUrl }" class="btn btn-template-transparent-primary"><i class="fa fa-link"></i>View Details</a>
+															</p>
+														</div>
+													</div>
+												</div>
+												<!-- Details -->
+												<div class="col-md-7">
+													<!-- Title -->
+													<div class="row">
+														<div class="col-xs-10 offer-brief-title">
+															<a data-bind="attr: { href: favorite.detailsUrl }">
+																<h4 data-bind="text: favorite.title"></h4>
+															</a>
+														</div>
+														<!-- Favorite Button -->
+														<div class="col-xs-2 offer-brief-favorite-icon text-right">
+															<span data-bind="if: favorite.isFavorite">
+														<span class="glyphicon glyphicon glyphicon-heart favorite-icon purpleblue-text" aria-hidden="true" 
+															title="Remove from Favorites" data-bind="click: removeFavorite"</span>
+															</span>
+														</div>
+													</div>
+
+													<!-- Tags -->
+													<div data-bind="css: { 'hidden': !(favorite.tags && favorite.tags.length > 0) }" class="row">
+														<h4 data-bind="foreach: { data: favorite.tags, as: 'tag' }">
+															<span class="label label-default" data-bind="text: tag.title"></span>
+														</h4>
+													</div>
+													<!-- Description -->
+													<div class="row">
+														<p data-bind="truncate: favorite.description, maxLength: 160"></p>
+													</div>
+													<!-- Price -->
+													<div class="row bottom text-center row-eq-height-md">
+														<div class="col-sm-4 offer-result-keyfigures">
+															<div class="offer-brief-detail-1-details-value"><strong data-bind="text: favorite.uniDistance"></strong><strong> km</strong></div>
+															<div class="offer-brief-detail-1-details-key"><small>to University Fulda</small></div>
+														</div>
+														<div class="col-sm-4 offer-result-keyfigures">
+															<div class="offer-brief-detail-1-details-value"><strong data-bind="text: favorite.size"></strong><strong> m²</strong></div>
+															<div class="offer-brief-detail-1-details-key"><small>Size</small></div>
+														</div>
+														<div class="col-sm-4 offer-result-keyfigures">
+															<div class="offer-brief-detail-1-details-value price-wrapper">
+																<span class="price"><strong data-bind="text: favorite.rent"></strong><strong> €</strong></span>
+																<span class="rate"><strong>/ </strong><strong data-bind="text: favorite.rentType"></strong></span>
+															</div>
+															<div class="offer-brief-detail-1-details-key"><small data-bind="text: favorite.offerType"></small></div>
+														</div>
+													</div>
+													<!-- Created on -->
+													<div class="row">
+														<span class="col-xs-12 created-on">Created on <span data-bind="text: favorite.creationDateFormat"></span></span>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div data-bind="if: favorites.length == 0">
+									<div class="alert alert-info" role="alert">You have no favorites yet.</div>
+								</div>
+							</div>
+							<!-- ______________ Offers ______________ -->
+							<div class="tab-pane" id="offers">
+								<div data-bind="if: $data.offers">
+									<div class="col-md-12 resultColumn" data-bind="foreach: { data: offers, as: 'offer' }">
+										<div class="panel panel-offer-result">
+											<div class="panel-body">
+												<!-- Hoverable Image -->
+												<div class="offer-brief-detail-1 box-image-text col-md-5">
+													<div class="top">
+														<div class="image thumbnail-container">
+															<img data-bind="attr: { src: offer.thumbnailUrl }" alt="" class="img-responsive thumbnail-img">
+														</div>
+														<div class="bg"></div>
+														<div class="text">
+															<p class="buttons">
+																<a data-bind="attr: { href: offer.detailsUrl }" class="btn btn-template-transparent-primary"><i class="fa fa-link"></i>View Details</a>
+															</p>
+														</div>
+													</div>
+												</div>
+												<!-- Details -->
+												<div class="col-md-7">
+													<!-- Title -->
+													<div class="row">
+														<div class="col-md-7 offer-brief-title">
+															<a data-bind="attr: { href: offer.detailsUrl }">
+																<h4 data-bind="text: offer.title"></h4>
+															</a>
+														</div>
+														<!-- Edit Offer Button -->
+														<div class="col-md-5 offer-brief-edit-button">
+															<a data-bind="attr: { href: offer.editDetailsUrl }" class="btn btn-template-main">Edit Offer</a> </a>
+														</div>
+													</div>
+													<!-- Tags -->
+													<div data-bind="css: { 'hidden': !(offer.tags && offer.tags.length > 0) }" class="row">
+														<h4 data-bind="foreach: { data: offer.tags, as: 'tag' }">
+															<span class="label label-default" data-bind="text: tag.title"></span>
+														</h4>
+													</div>
+													<!-- Description -->
+													<div class="row">
+														<p data-bind="truncate: offer.description, maxLength: 160"></p>
+													</div>
+													<!-- Price -->
+													<div class="row bottom text-center row-eq-height-md">
+														<div class="col-sm-4 offer-result-keyfigures">
+															<div class="offer-brief-detail-1-details-value"><strong data-bind="text: offer.uniDistance"></strong><strong> km</strong></div>
+															<div class="offer-brief-detail-1-details-key"><small>to University Fulda</small></div>
+														</div>
+														<div class="col-sm-4 offer-result-keyfigures">
+															<div class="offer-brief-detail-1-details-value"><strong data-bind="text: offer.size"></strong><strong> m²</strong></div>
+															<div class="offer-brief-detail-1-details-key"><small>Size</small></div>
+														</div>
+														<div class="col-sm-4 offer-result-keyfigures">
+															<div class="offer-brief-detail-1-details-value price-wrapper">
+																<span class="price"><strong data-bind="text: offer.rent"></strong><strong> €</strong></span>
+																<span class="rate"><strong>/ </strong><strong data-bind="text: offer.rentType"></strong></span>
+															</div>
+															<div class="offer-brief-detail-1-details-key"><small data-bind="text: offer.offerType"></small></div>
+														</div>
+													</div>
+													<!-- Created on -->
+													<div class="row">
+														<span class="col-xs-12 created-on">Created on <span data-bind="text: offer.creationDateFormat"></span></span>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div data-bind="ifnot: $data.offers">
+									<div data-bind="if: type==1">
+										<div class="alert alert-info" role="alert">To be able to create offers:</div>
+										<a href="/pages/becomeLandlord" type="button" class="btn btn-template-main">Become Landlord</a>
+									</div>
+									<div data-bind="if: type==2">
+										<div class="alert alert-info" role="alert">You have no offers yet.</div>
+										<a href="/pages/newOffer" type="button" class="btn btn-template-main">Create Offer</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

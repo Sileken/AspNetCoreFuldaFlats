@@ -1,0 +1,17 @@
+/* Special component css here and general css in main.css */
+
+.spacing-top {
+    margin-top: 5px;
+}
+
+.spacing-double {
+    margin-top: 15px;
+}
+
+.title {
+    text-align: center;
+}
+
+input[type=checkbox], input[type=radio]{
+    margin: 0;
+}

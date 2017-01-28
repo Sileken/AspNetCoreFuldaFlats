@@ -1,0 +1,60 @@
+<!--************************************************************
+ * File:            copyrightBar.component.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         07.12.2016
+ * Description:     Knockout Template for copyright bar.
+ ************************************************************-->
+<div id="copyright">
+    <div class="container">
+        <div class="row hidden-xs">
+            <div class="col-md-12 text-center">
+                <!-- ko if: legalDisclosurePageInfo -->
+                <span><a data-bind="attr: { href: legalDisclosurePageInfo().url }, text: legalDisclosurePageInfo().title"></a></span>
+                <!-- /ko -->
+                <!-- ko if: legalDisclosurePageInfo -->
+                <span>|</span>
+                <!-- /ko -->
+                <a type="button" href="javascript: void(0)" data-toggle="modal" data-target="#contactModalDialog">Contact</a>
+                <!-- ko if: termsOfUsePageInfo  -->
+                <span>|</span>
+                <!-- /ko -->
+                <!-- ko if: termsOfUsePageInfo -->
+                <span><a data-bind="attr: { href: termsOfUsePageInfo().url }, text: termsOfUsePageInfo().title"></a></span>
+                <!-- /ko -->
+            </div>
+        </div>
+        <div class="row hidden-xs">
+            <div class="col-md-12 text-center">
+                <!-- ko if: copyrightDate && copyrightName -->
+                <span>&copy;</span>
+                <span data-bind="text: copyrightDate"></span>
+                <span>. </span>
+                <span data-bind="text: copyrightName"></span>
+                <!-- /ko -->
+                <!-- ko if: copyrightDate && copyrightName && templateAuthorName && templateUrl-->
+                <span>|</span>
+                <!-- /ko -->
+                <!-- ko if: templateAuthorName && templateUrl -->
+                <span>Template by 
+                    <a data-bind="text: templateAuthorName, attr: { href: templateUrl}"></a>
+                </span>
+                <!-- /ko -->
+            </div>
+        </div>
+        <div class="row visible-xs">
+            <!-- ko if: copyrightDate && copyrightName -->
+            <div class="col-md-4 text-center">
+                <span>&copy;</span>
+                <span data-bind="text: copyrightDate"></span>
+                <span>. </span>
+                <span data-bind="text: copyrightName"></span>
+            </div>
+            <!-- /ko -->
+            <!-- ko if: templateAuthorName && templateUrl -->
+            <div class="col-md-4 text-center">
+                <a data-bind="text: templateAuthorName, attr: { href: templateUrl}"></a>
+            </div>
+            <!-- /ko -->
+        </div>
+    </div>
+</div>

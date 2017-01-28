@@ -1,0 +1,14 @@
+/************************************************************
+ * File:            errorModalDialog.component.css
+ * Author:          Jonas Kleinkauf
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for error modal dialog.
+ ************************************************************/
+.error-title{
+    color: #a94442;
+    font-size: 3rem;
+}
+
+.error-title span{
+    font-size: 1rem;
+}

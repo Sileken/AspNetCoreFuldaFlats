@@ -1,0 +1,29 @@
+/************************************************************
+ * File:            contactModalDialog.component.css
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for contact modal dialog.
+ ************************************************************/
+#contactMapContainer .marker-popup{
+  width: 280px;
+}
+
+#contactMapContainer .map-popup-details{
+  background-color: white;
+}
+
+#contactMapContainer .map-popup-img{
+  color: #FFFFFF !important;
+}
+
+#contactMapContainer .map-popup-viewtext{
+  height: 30% !important;
+}
+
+#contactMapContainer .mapColumn{
+    height: 280px;
+  }
+
+#contactMapContainer .leaflet-top, #contactMap .leaflet-bottom{
+  z-index: 400 !important;
+}

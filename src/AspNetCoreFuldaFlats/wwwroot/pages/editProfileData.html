@@ -1,0 +1,38 @@
+<!--************************************************************
+ * File:            editProfileData.html
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Basic HTML file for editProfileData Page
+ ************************************************************ -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title data-bind="text: getPageTitle()">FuldaFlats.de</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    <div id="all">
+        <header>
+            <div data-bind='component: { name: "demo-warning", params: demoWarningMessage }'></div>
+            <div data-bind='component: { name: "navigation", params: navigationBar }'></div>
+        </header>
+
+        <div data-bind='component: { name: "breadcrumb", params: breadcrumbBar }'></div>
+
+        <edit-profile-data></edit-profile-data>
+
+        <div data-bind='component: { name: "copyright", params: copyrightBar }'></div>
+    </div>
+
+    <script src="/bower_components/requirejs/require.js" data-main="/../js/app"></script>
+
+</body>
+
+</html>

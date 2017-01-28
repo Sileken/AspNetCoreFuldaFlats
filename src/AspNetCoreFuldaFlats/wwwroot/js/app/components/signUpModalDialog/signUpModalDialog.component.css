@@ -1,0 +1,34 @@
+/************************************************************
+ * File:            signupModalDialog.component.css
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for sign up dialog.
+ ************************************************************/
+/* Special component css here and general css in main.css */
+
+#signUpModalDialog .modal-dialog{
+    max-width: 400px;
+}
+
+#signUpModalDialog .input-group,
+#signUpModalDialog .modal-body > form > input,
+#signUpModalDialog .modal-body > form > select {
+    margin-bottom: 5px;
+}
+
+#signUpModalDialog .alert {
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+#signUpModalDialog .valid{
+    border: 1px solid green;
+}
+
+#signUpModalDialog .inValid{
+    border: 1px solid red;
+}
+
+#signUpModalDialog #termsOfUseAgreementGroup{
+    padding-top: 5px;
+}

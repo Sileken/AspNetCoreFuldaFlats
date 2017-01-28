@@ -1,0 +1,28 @@
+/************************************************************
+ * File:            signinModalDialog.component.css
+ * Author:          Patrick Hasenauer
+ * LastMod:         02.12.2016
+ * Description:     Custom CSS for sign in dialog.
+ ************************************************************/
+/* Special component css here and general css in main.css */
+
+#signInModalDialog .modal-dialog{
+    max-width: 400px;
+}
+
+#signInModalDialog .input-group {
+    margin-bottom: 5px;
+}
+
+#signInModalDialog .alert {
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+#signInModalDialog .valid{
+    border: 1px solid green;
+}
+
+#signInModalDialog .inValid{
+    border: 1px solid red;
+}
