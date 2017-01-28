@@ -1,0 +1,29 @@
+{
+  "name": "fuldaflatsclient",
+  "homepage": "https://github.com/JoeChester/masterprojekt",
+  "authors": [
+    "JoeChester <jzone123@googlemail.com>",
+    "Patrick Hasenauer <patrick.hasenauer@outlook.de>"
+  ],
+  "description": "Client for fulda flats.",
+  "main": "index.html",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.1",
+    "knockout": "^3.4.0",
+    "bootstrap": "^3.3.7",
+    "requirejs": "^2.3.2",
+    "text": "^2.0.15",
+    "require-css": "^0.1.8",
+    "jqcloud2": "^2.0.2",
+    "bootstrap-switch": "^3.3.2"
+  }
+}
