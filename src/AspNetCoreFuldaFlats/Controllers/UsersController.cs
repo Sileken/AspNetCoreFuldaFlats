@@ -28,7 +28,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             _logger = logger;
         }
 
-        [HttpPost()]
+        [HttpPost]
         public void Register()
         {
         }
@@ -66,6 +66,8 @@ namespace AspNetCoreFuldaFlats.Controllers
                             {
                                 new Claim(ClaimTypes.Name, user.Email, ClaimValueTypes.Email,
                                     HttpContext.Request.Host.Host),
+                                new Claim(ClaimTypes.PrimarySid, user.Id.ToString(), ClaimValueTypes.String,
+                                    HttpContext.Request.Host.Host),
                                 new Claim(ClaimTypes.Email, user.Email, ClaimValueTypes.Email,
                                     HttpContext.Request.Host.Host),
                                 new Claim(ClaimTypes.GivenName, user.FirstName, ClaimValueTypes.String,
@@ -77,16 +79,20 @@ namespace AspNetCoreFuldaFlats.Controllers
                             var claimsIdentity = new ClaimsIdentity(claims,
                                 GlobalConstants.IdentityAuthenticationSchema);
                             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
                             await HttpContext.Authentication.SignInAsync(GlobalConstants.CookieAuthenticationSchema,
                                 claimsPrincipal);
                             HttpContext.User = claimsPrincipal;
 
                             user.LoginAttempts = 0;
 
-                            _database.Entry(user)
+                            await _database.Entry(user)
                                 .Collection(u => u.DatabaseFavorites)
                                 .Query()
-                                .Include(f => f.Offer);
+                                .Include(f => f.Offer)
+                                .LoadAsync();
+
+                            await _database.Entry(user).Collection(u => u.Offers).LoadAsync();
 
                             sendStatus = Ok(user);
                         }
@@ -186,6 +192,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 var user = await
                     _database.User.Include(u => u.DatabaseFavorites)
                         .ThenInclude(f => f.Offer)
+                        .Include(u => u.Offers)
                         .SingleOrDefaultAsync(u => u.Id == id);
 
                 if (user != null)

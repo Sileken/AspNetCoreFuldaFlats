@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace AspNetCoreFuldaFlats.Database.Models
@@ -31,9 +32,14 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public int? InternetSpeed { get; set; }
         public string KitchenDescription { get; set; }
         public bool? Lan { get; set; }
-        //[JsonProperty("Landlord")]
-        //[ForeignKey("Landlord")]
-        //public virtual User DatabaseLandlord { get; set; }
+
+        [JsonIgnore]
+        public int? Landlord { get; set; }
+
+        [JsonProperty("Landlord")]
+        [ForeignKey("Landlord")]
+        public virtual User DatabaseLandlord { get; set; }
+
         public DateTime? LastModified { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
@@ -59,10 +65,14 @@ namespace AspNetCoreFuldaFlats.Database.Models
         [NotMapped]
         public string ThumbnailUrl
         {
-            get { return string.IsNullOrWhiteSpace(_thumbnailUrl) ? "/uploads/dummy.png" : _thumbnailUrl; }
+            get { return string.IsNullOrWhiteSpace(_thumbnailUrl) ? Mediaobjects.Count > 0 ? Mediaobjects.First().ThumbnailUrl : "/uploads/dummy.png" : _thumbnailUrl; }
             set { _thumbnailUrl = value; }
         }
         
-        //public virtual ICollection<Mediaobject> Mediaobjects { get; set; }
+        [InverseProperty("Offer")]
+        public virtual ICollection<Mediaobject> Mediaobjects { get; set; }
+
+        [InverseProperty("Offer")]
+        public virtual ICollection<Tag> Tags { get; set; }
     }
 }

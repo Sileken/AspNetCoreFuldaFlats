@@ -2,45 +2,123 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreFuldaFlats.Database;
+using AspNetCoreFuldaFlats.Database.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
+    [AllowAnonymous]
     [Route("api/[controller]")]
     public class TagsController : Controller
     {
-        // GET: api/values
+        private readonly WebApiDataContext _database;
+        private readonly ILogger _logger;
+
+        public TagsController(WebApiDataContext webApiDataContext, ILogger<TagsController> logger)
+        {
+            _database = webApiDataContext;
+            _logger = logger;
+        }
+
         [HttpGet]
-        public IEnumerable<string> Get()
+        public string[] GetTags()
         {
-            return new string[] { "value1", "value2" };
-        }
+            return new string[]
+            {
+                //Languages
+                "english",
+                "german",
+                "french",
+                "spanish",
+                "italian",
+                "portuguese",
+                "turkish",
+                "russian",
+                "ukrainian",
+                "persian",
+                "arabic",
+                "japanese",
+                "chinese",
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
+                //Faculties
+                "computer science",
+                "electrical engineering",
+                "food technology",
+                "nutritional sciences",
+                "nursing and health sciences",
+                "social and cultural sciences",
+                "social work",
+                "business economics",
+                "accounting, finance, controlling",
+                "dietetics",
+                "nutritional psychology",
+                "food processing",
+                "health management",
+                "global software development",
+                "intercultural communication and european studies",
+                "international food business and consumer studies",
+                "international management",
+                "oecotrophology",
+                "public health",
+                "public health nutrition",
+                "supply chain management",
+                "sustainable food systems",
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody]string value)
-        {
-        }
+                //Interests
+                "football",
+                "table tennis",
+                "music",
+                "computer games",
+                "party",
+                "beerpong",
+                "bowling",
+                "darts",
+                "drone racing",
+                "cooking",
+                "travel",
+                "art",
+                "dancing",
+                "free-climbing",
+                "bodybuilding",
+                "yoga",
+                "photography",
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
+                //Sport
+                "basketball",
+                "soccer",
+                "handball",
+                "extreme sports",
+                "esports",
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
+                //Mitbewohner
+                "only men",
+                "only woman",
+                "under 25",
+                "under 30",
+                "over 30",
+                "singles",
+
+                //Sexuality
+                "heterosexual",
+                "homosexual",
+                "bisexual",
+
+                //Religions
+                "catholic",
+                "evangelical",
+                "orthodox",
+                "atheist",
+                "islam",
+                "hinduism",
+                "buddhism",
+                "judaism",
+                "bahai"
+            };
+        }     
     }
 }

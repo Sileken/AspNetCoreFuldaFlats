@@ -38,14 +38,19 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public sbyte? IsLocked { get; set; }
         [JsonIgnore]
         public int? LoginAttempts { get; set; }
+
         [JsonIgnore]
-        [Column("Favorites")]
+        [InverseProperty("User")]
         public virtual ICollection<Favorite> DatabaseFavorites { get; set; }
+
         [NotMapped]
-        public ICollection<Offer> Favorites
+        public virtual ICollection<Offer> Favorites
             =>
             (DatabaseFavorites != null) && (DatabaseFavorites.Count > 0)
                 ? DatabaseFavorites.Where(d => d.Offer != null).Select(d => d.Offer).ToArray()
                 : new Offer[0];
+    
+        [InverseProperty("DatabaseLandlord")]
+        public virtual ICollection<Offer> Offers { get; set; }
     }
 }
