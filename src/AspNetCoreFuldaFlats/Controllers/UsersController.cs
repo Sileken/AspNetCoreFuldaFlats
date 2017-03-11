@@ -48,6 +48,8 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password))
             {
+                email = email.ToLower();
+
                 try
                 {
                     var user = await
@@ -148,9 +150,55 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         [Authorize]
         [HttpPut("me")]
-        public async Task<IActionResult> UpdateMe()
+        public async Task<IActionResult> UpdateMe([FromBody] User updateInfo)
         {
-            return BadRequest();
+            IActionResult response = BadRequest();
+
+            try
+            {
+                var user = await GetCurrentUserFromDatabase();
+
+                if (user == null)
+                {
+                    response = NotFound();
+                }
+                else
+                {
+                    LandlordUpdateError landlordValidationInfo = null;
+                    if (user.Type == UserConstants.UserTypes.Landlord)
+                    {
+                        landlordValidationInfo = await ValidateLandlordInfo(user, updateInfo);
+                    }
+                    NormalUserUpdateError normalUserUpdateError = await ValidateNormalUserInfo(user, updateInfo, landlordValidationInfo);
+
+                    if (normalUserUpdateError.HasError)
+                    {
+                        response = BadRequest(normalUserUpdateError);
+                    }
+                    else
+                    {
+                        UpdateNormalUserProperties(user, updateInfo);
+                        if (user.Type == UserConstants.UserTypes.Landlord)
+                        {
+                            UpdateLandlordProperties(user, updateInfo);
+                        }
+
+                        await PersistUser(user);
+                        await LoadUserRelationships(user);
+
+                        await SignInUser(user);
+
+                        response = Ok(user);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
         }
 
         [Authorize]
@@ -171,22 +219,29 @@ namespace AspNetCoreFuldaFlats.Controllers
                 {
                     if (user.Type != UserConstants.UserTypes.Normal)
                     {
-                        response = BadRequest(new UpgradeError
+                        response = BadRequest(new LandlordUpdateError
                         {
                             Upgrade = {[0] = "Unable to upgrade this user account."}
                         });
                     }
                     else
                     {
-                        UpgradeError validationInfo = ValidateUpgradeInfo(upgradeInfo);
-                        if (validationInfo.HasError)
+                        LandlordUpdateError landlordValidationInfo = await ValidateUpgradeToLandlord(user, upgradeInfo);
+                        NormalUserUpdateError normalUserUpdateError = await ValidateNormalUserInfo(user, upgradeInfo, landlordValidationInfo);
+                        if (normalUserUpdateError.HasError)
                         {
-                            response = BadRequest(validationInfo);
+                            response = BadRequest(normalUserUpdateError);
                         }
                         else
                         {
+                            UpdateNormalUserProperties(user, upgradeInfo);
+                            UpdateLandlordProperties(user, upgradeInfo);
                             UpgradeUser(user, upgradeInfo);
+                            await PersistUser(user);
                             await LoadUserRelationships(user);
+
+                            await SignInUser(user);
+
                             response = Ok(user);
                         }
                     }
@@ -324,47 +379,98 @@ namespace AspNetCoreFuldaFlats.Controllers
             await _database.SaveChangesAsync();
         }
 
-        private UpgradeError ValidateUpgradeInfo(User upgradeInfo)
+        private async Task<LandlordUpdateError> ValidateLandlordInfo(User currentUser, User userInfo, LandlordUpdateError prefilledErrorInfo = null)
         {
-            UpgradeError upgradeError = new UpgradeError();
+            LandlordUpdateError updateError = prefilledErrorInfo as LandlordUpdateError ?? new LandlordUpdateError();
 
-            if (string.IsNullOrWhiteSpace(upgradeInfo.PhoneNumber))
+            if (!string.IsNullOrWhiteSpace(userInfo.Email) && new EmailAddressAttribute().IsValid(userInfo.Email) == false)
             {
-                upgradeError.PhoneNumber[0] = "Please enter a phone number.";
-                upgradeError.HasError = true;
+                updateError.Email[0] = "Please enter a valid eMail.";
+                updateError.HasError = true;
+            }
+            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && userInfo.Email.ToLower() != currentUser.Email.ToLower() &&
+                      await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
+            {
+                updateError.Email[0] = "Please enter a valid eMail. This eMail is not unique.";
+                updateError.HasError = true;
             }
 
-            if (string.IsNullOrWhiteSpace(upgradeInfo.ZipCode))
+            return updateError;
+        }
+
+        private async Task<LandlordUpdateError> ValidateUpgradeToLandlord(User currentUser, User userInfo, LandlordUpdateError prefilledErrorInfo = null)
+        {
+            LandlordUpdateError updateError = prefilledErrorInfo as LandlordUpdateError ?? new LandlordUpdateError();
+
+            if (string.IsNullOrWhiteSpace(userInfo.PhoneNumber))
             {
-                upgradeError.ZipCode[0] = "Please enter a zip code.";
-                upgradeError.HasError = true;
+                updateError.PhoneNumber[0] = "Please enter a phone number.";
+                updateError.HasError = true;
             }
 
-            if (string.IsNullOrWhiteSpace(upgradeInfo.City))
+            if (string.IsNullOrWhiteSpace(userInfo.ZipCode))
             {
-                upgradeError.City[0] = "Please enter a city.";
-                upgradeError.HasError = true;
+                updateError.ZipCode[0] = "Please enter a zip code.";
+                updateError.HasError = true;
             }
 
-            if (string.IsNullOrWhiteSpace(upgradeInfo.Street))
+            if (string.IsNullOrWhiteSpace(userInfo.City))
             {
-                upgradeError.Street[0] = "Please enter a street.";
-                upgradeError.HasError = true;
+                updateError.City[0] = "Please enter a city.";
+                updateError.HasError = true;
             }
 
-            if (string.IsNullOrWhiteSpace(upgradeInfo.HouseNumber))
+            if (string.IsNullOrWhiteSpace(userInfo.Street))
             {
-                upgradeError.HouseNumber[0] = "Please enter a house number.";
-                upgradeError.HasError = true;
+                updateError.Street[0] = "Please enter a street.";
+                updateError.HasError = true;
             }
 
-            if (string.IsNullOrWhiteSpace(upgradeInfo.Email) && new EmailAddressAttribute().IsValid(upgradeInfo.Email) == false)
+            if (string.IsNullOrWhiteSpace(userInfo.HouseNumber))
             {
-                upgradeError.Email[0] = "Please enter a valid eMail.";
-                upgradeError.HasError = true;
+                updateError.HouseNumber[0] = "Please enter a house number.";
+                updateError.HasError = true;
             }
 
-            return upgradeError;
+            if (string.IsNullOrWhiteSpace(userInfo.Email) || new EmailAddressAttribute().IsValid(userInfo.Email) == false)
+            {
+                updateError.Email[0] = "Please enter a valid eMail.";
+                updateError.HasError = true;
+            }
+            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && userInfo.Email.ToLower() != currentUser.Email.ToLower() &&
+                      await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
+            {
+                updateError.Email[0] = "Please enter a valid eMail. This eMail is not unique.";
+                updateError.HasError = true;
+            }
+
+            return updateError;
+        }
+
+        private async Task<NormalUserUpdateError> ValidateNormalUserInfo(User currentUser, User userInfo, NormalUserUpdateError prefilledErrorInfo = null)
+        {
+            NormalUserUpdateError updateError = prefilledErrorInfo ?? new NormalUserUpdateError();
+            
+            UserConstants.Genders gender;
+            if (!string.IsNullOrWhiteSpace(userInfo.Gender) && !Enum.TryParse(userInfo.Gender, true, out gender))
+            {
+                updateError.Gender[0] = $"Please enter a valid gender. {String.Join(",", Enum.GetNames(typeof(UserConstants.Genders)))}.";
+                updateError.HasError = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(userInfo.Email) && new EmailAddressAttribute().IsValid(userInfo.Email) == false)
+            {
+                updateError.Email[0] = "Please enter a valid eMail.";
+                updateError.HasError = true;
+            }
+            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && userInfo.Email.ToLower() != currentUser.Email.ToLower() &&
+                      await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
+            {
+                updateError.Email[0] = "Please enter a valid eMail. This eMail is not unique.";
+                updateError.HasError = true;
+            }
+
+            return updateError;
         }
 
         private string MergeOfficeAddress(User user)
@@ -405,16 +511,73 @@ namespace AspNetCoreFuldaFlats.Controllers
         {
             currentUser.Type = UserConstants.UserTypes.Landlord;
             currentUser.UpgradeDate = DateTime.Now;
-            currentUser.AverageRating = 1;
-            currentUser.PhoneNumber = upgradeInfo.PhoneNumber;
-            currentUser.ZipCode = upgradeInfo.ZipCode;
-            currentUser.City = upgradeInfo.City;
-            currentUser.Street = upgradeInfo.Street;
-            currentUser.HouseNumber = upgradeInfo.HouseNumber;
-            currentUser.Email = upgradeInfo.Email;
-            currentUser.OfficeAddress = MergeOfficeAddress(currentUser);
+            currentUser.AverageRating = 1;          
         }
 
+        private void UpdateNormalUserProperties(User currentUser, User updateInfo)
+        {
+            if (!string.IsNullOrWhiteSpace(updateInfo.FirstName))
+            {
+                currentUser.FirstName = updateInfo.FirstName;
+            }
+            
+            if(!string.IsNullOrWhiteSpace(updateInfo.LastName))
+            {
+                currentUser.LastName = updateInfo.LastName;
+            }
+
+            if (updateInfo.Birthday.HasValue)
+            {
+                currentUser.Birthday = updateInfo.Birthday;
+            }
+
+            UserConstants.Genders gender;
+            if (Enum.TryParse(updateInfo.Gender, true, out gender))
+            {
+                currentUser.Gender = Enum.GetName(typeof(UserConstants.Genders), gender).ToLower();
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateInfo.Email))
+            {
+                currentUser.Email = updateInfo.Email.ToLower();
+            }
+        }
+
+        private void UpdateLandlordProperties(User currentUser, User updateInfo)
+        {
+            if (!string.IsNullOrWhiteSpace(updateInfo.PhoneNumber))
+            {
+                currentUser.PhoneNumber = updateInfo.PhoneNumber;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateInfo.ZipCode))
+            {
+                currentUser.ZipCode = updateInfo.ZipCode;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateInfo.City))
+            {
+                currentUser.City = updateInfo.City;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateInfo.Street))
+            {
+                currentUser.Street = updateInfo.Street;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateInfo.HouseNumber))
+            {
+                currentUser.HouseNumber = updateInfo.HouseNumber;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateInfo.Email))
+            {
+                currentUser.Email = updateInfo.Email.ToLower();
+            }
+
+            currentUser.OfficeAddress = MergeOfficeAddress(currentUser);
+        }
+        
         private string GetPasswordHash(string plainPassword)
         {
             return Convert.ToBase64String(

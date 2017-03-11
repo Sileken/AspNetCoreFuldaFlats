@@ -12,5 +12,11 @@
             public static int Normal = 1;
             public static int Landlord = 2;
         }
+
+        public enum Genders
+        {
+            Male,
+            Female
+        }
     }
 }
