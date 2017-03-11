@@ -15,8 +15,5 @@ namespace AspNetCoreFuldaFlats.Constants
 
         public static string IdentityAuthenticationSchema = "Identity";
         public static string CookieAuthenticationSchema = "Cookie";
-        public static string DefaultUserProfilePicture = "/uploads/cupcake.png";
-        public static string PasswordSalt = "fuldaflats#2016#";
-        public static int MaxSignInAttempts = 10;
     }
 }
