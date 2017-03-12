@@ -71,16 +71,53 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         [Authorize]
         [HttpPut("{offerId}")]
-        public async Task<IActionResult> UpdateOffer(string OfferId)
+        public async Task<IActionResult> UpdateOffer(int offerId)
         {
             return BadRequest();
         }
 
         [Authorize]
         [HttpDelete("{offerId}")]
-        public async Task<IActionResult> DeleteOffer(string OfferId)
+        public async Task<IActionResult> DeleteOffer(int offerId)
         {
-            return BadRequest();
+            IActionResult sendStatus = BadRequest();
+
+            try
+            {
+                var offer = await _database.Offer.SingleOrDefaultAsync(o => o.Id == offerId);
+                if (offer != null)
+                {
+                    if (offer.Landlord != int.Parse(HttpContext.User.GetUserId()))
+                    {
+                        sendStatus = StatusCode(401,
+                        new DeleteOfferError
+                        {
+                            Offer = new List<string> { "You can only delete your own offers." }
+                        });
+                    }
+                    else
+                    {
+                        _database.Remove(offer);
+                        await _database.SaveChangesAsync();
+                        sendStatus = StatusCode(204);
+                    }
+                }
+                else
+                {
+                    sendStatus = NotFound(
+                        new DeleteOfferError
+                        {
+                            Offer = new List<string> {"The offer was not found."}
+                        });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                sendStatus = StatusCode(500);
+            }
+
+            return sendStatus;
         }
 
         [HttpPost("search")]
@@ -180,7 +217,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             if (await _database.Review.AnyAsync(r => (r.UserId == userId) && (r.OfferId == offerId)))
             {
-                reviewError.Review = new List<string> { "You can only post one review per offer" };
+                reviewError.Review = new List<string> {"You can only post one review per offer"};
                 isError = true;
             }
 
@@ -261,7 +298,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 sendStatus = BadRequest(reviewError);
             }
-            
+
             return sendStatus;
         }
 
