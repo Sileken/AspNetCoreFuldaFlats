@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Dynamic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AspNetCoreFuldaFlats.Database;
@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
@@ -41,10 +39,14 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             try
             {
-                var offer = await _database.Offer.Include(o => o.DatabaseLandlord).FirstOrDefaultAsync(o => o.Id == offerId);
+                var offer = await _database.Offer
+                    .Include(o => o.DatabaseLandlord)
+                    .Include(o => o.MediaObjects)
+                    .SingleOrDefaultAsync(o => o.Id == offerId);
+
                 if (offer != null)
                 {
-                    if (offer.Status != 1 && offer.Landlord != int.Parse(HttpContext.User.GetUserId()))
+                    if ((offer.Status != 1) && (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
                     {
                         sendStatus = Unauthorized();
                     }
@@ -111,7 +113,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 var offer = await
                     _database.Offer.OrderByDescending(o => o.CreationDate)
                         .Include(o => o.DatabaseLandlord)
-                        .Include(o => o.Mediaobjects)
+                        .Include(o => o.MediaObjects)
                         .Take(10)
                         .ToListAsync();
                 sendStatus = Ok(offer);
@@ -137,16 +139,17 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             try
             {
-                var offer = await _database.Offer.FirstOrDefaultAsync(o => o.Id == offerId);
+                var offer = await _database.Offer.SingleOrDefaultAsync(o => o.Id == offerId);
                 if (offer != null)
                 {
-                    if (offer.Status != 1 && offer.Landlord != int.Parse(HttpContext.User.GetUserId()))
+                    if ((offer.Status != 1) && (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
                     {
                         sendStatus = Unauthorized();
                     }
                     else
                     {
-                        Review[] reviews = await _database.Review.Include(r => r.User).Where(r => r.OfferId == offerId).ToArrayAsync();
+                        var reviews =
+                            await _database.Review.Include(r => r.User).Where(r => r.OfferId == offerId).ToArrayAsync();
                         sendStatus = Ok(reviews);
                     }
                 }
@@ -170,20 +173,26 @@ namespace AspNetCoreFuldaFlats.Controllers
         {
             IActionResult sendStatus = BadRequest();
 
-            int userId = int.Parse(HttpContext.User.GetUserId());
+            var userId = int.Parse(HttpContext.User.GetUserId());
 
-            bool isError = false;
-            ReviewError reviewError = new ReviewError();
+            var isError = false;
+            var reviewError = new ReviewError();
 
-            if (string.IsNullOrWhiteSpace(review.Title))
+            if (await _database.Review.AnyAsync(r => (r.UserId == userId) && (r.OfferId == offerId)))
             {
-                reviewError.Title[0] = "Please enter a valid title.";
+                reviewError.Review = new List<string> { "You can only post one review per offer" };
                 isError = true;
             }
 
-            if(string.IsNullOrWhiteSpace(review.Comment))
+            if (string.IsNullOrWhiteSpace(review.Title))
             {
-                reviewError.Rating[0] = "Please enter a valid rating.";
+                reviewError.Title = new List<string> {"Please enter a valid title."};
+                isError = true;
+            }
+
+            if (review.Rating == null)
+            {
+                reviewError.Rating = new List<string> {"Please enter a valid rating."};
                 isError = true;
             }
 
@@ -191,19 +200,25 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 try
                 {
-                    Offer offer = _database.Offer.FirstOrDefault(f => f.Id == offerId);
+                    var offer =
+                        await
+                            _database.Offer.Include(o => o.DatabaseLandlord)
+                                .SingleOrDefaultAsync(f => f.Id == offerId);
                     if (offer == null)
                     {
                         sendStatus = NotFound();
                     }
-                    else if(offer.OfferType == "FLAT" || offer.OfferType == "SHARE")
+                    else if ((offer.OfferType == "FLAT") || (offer.OfferType == "SHARE"))
                     {
-                        reviewError.OfferType[0] = "You can not post reviews for offer with type FLAT or SHARE";
+                        reviewError.OfferType = new List<string>
+                        {
+                            "You can not post reviews for offer with type FLAT or SHARE"
+                        };
                         sendStatus = BadRequest(reviewError);
                     }
                     else if (offer.Landlord == userId)
                     {
-                        reviewError.OfferType[0] = "You can not post reviews your own offer.";
+                        reviewError.OfferType = new List<string> {"You can not post reviews your own offer."};
                         sendStatus = BadRequest(reviewError);
                     }
                     else
@@ -212,18 +227,25 @@ namespace AspNetCoreFuldaFlats.Controllers
                         review.UserId = userId;
                         review.CreationDate = DateTime.Now;
                         await _database.Review.AddAsync(review);
+                        await _database.SaveChangesAsync();
 
                         var newAverageRating = 0;
-                        await _database.Review.Where(r => r.UserId == userId).ForEachAsync((rev) =>
+                        var reviews = 0;
+                        foreach (
+                            var offer2 in
+                            await _database.Offer.Where(o => o.Landlord == offer.Landlord).ToListAsync())
                         {
-                            newAverageRating += rev.Rating ?? 0;
-                        });
+                            await _database.Review.Where(r => r.OfferId == offer2.Id)
+                                .ForEachAsync(rev =>
+                                {
+                                    newAverageRating += rev.Rating ?? 0;
+                                    reviews++;
+                                });
+                        }
 
-                        _database.User.Update(new User()
-                        {
-                            Id = userId,
-                            AverageRating = newAverageRating
-                        });
+                        var offerLandlord = offer.DatabaseLandlord;
+                        offerLandlord.AverageRating = reviews == 0 ? 0 : newAverageRating/reviews;
+                        _database.User.Update(offerLandlord);
 
                         await _database.SaveChangesAsync();
                         sendStatus = StatusCode(201);
@@ -239,11 +261,10 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 sendStatus = BadRequest(reviewError);
             }
-        
-
+            
             return sendStatus;
         }
-        
+
         #endregion
 
         #region Offer Favorites 
@@ -289,7 +310,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             try
             {
                 var favorite = await
-                    _database.Favorite.FirstOrDefaultAsync(
+                    _database.Favorite.SingleOrDefaultAsync(
                         f => (f.UserId.ToString() == HttpContext.User.GetUserId()) && (f.OfferId == offerId));
 
                 if (favorite != null)

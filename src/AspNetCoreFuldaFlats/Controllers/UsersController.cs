@@ -53,6 +53,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
                     UpdateNormalUserProperties(user, signUpInfo);
                     await PersistUser(user);
+                    await LoadUserRelationships(user);
                     await SignInUser(user);
                     response = StatusCode(201, user);
                 }
@@ -374,9 +375,9 @@ namespace AspNetCoreFuldaFlats.Controllers
             if (withRelationships)
             {
                 user = await _database.User
-                    .Include(u => u.DatabaseFavorites).ThenInclude(f => f.Offer).ThenInclude(o => o.Mediaobjects)
+                    .Include(u => u.DatabaseFavorites).ThenInclude(f => f.Offer).ThenInclude(o => o.MediaObjects)
                     .Include(u => u.DatabaseFavorites).ThenInclude(f => f.Offer).ThenInclude(o => o.Tags)
-                    .Include(u => u.Offers).ThenInclude(o => o.Mediaobjects)
+                    .Include(u => u.Offers).ThenInclude(o => o.MediaObjects)
                     .Include(u => u.Offers).ThenInclude(o => o.Tags)
                     .SingleOrDefaultAsync(u => u.Email == HttpContext.User.Identity.Name);
             }
@@ -393,13 +394,13 @@ namespace AspNetCoreFuldaFlats.Controllers
             await _database.Entry(user)
                 .Collection(u => u.DatabaseFavorites)
                 .Query()
-                .Include(f => f.Offer).ThenInclude(o => o.Mediaobjects)
+                .Include(f => f.Offer).ThenInclude(o => o.MediaObjects)
                 .Include(f => f.Offer).ThenInclude(o => o.Tags)
                 .LoadAsync();
 
             await _database.Entry(user).Collection(u => u.Offers)
                 .Query()
-                .Include(o => o.Mediaobjects)
+                .Include(o => o.MediaObjects)
                 .Include(o => o.Tags)
                 .LoadAsync();
         }

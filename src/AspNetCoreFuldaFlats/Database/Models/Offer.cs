@@ -36,7 +36,7 @@ namespace AspNetCoreFuldaFlats.Database.Models
         [JsonIgnore]
         public int? Landlord { get; set; }
 
-        [JsonProperty("Landlord")]
+        [JsonProperty("landlord")]
         [ForeignKey("Landlord")]
         public virtual User DatabaseLandlord { get; set; }
 
@@ -65,12 +65,12 @@ namespace AspNetCoreFuldaFlats.Database.Models
         [NotMapped]
         public string ThumbnailUrl
         {
-            get { return string.IsNullOrWhiteSpace(_thumbnailUrl) ? Mediaobjects.Count > 0 ? Mediaobjects.First().ThumbnailUrl : "/uploads/dummy.png" : _thumbnailUrl; }
+            get { return string.IsNullOrWhiteSpace(_thumbnailUrl) ? MediaObjects.Count > 0 ? MediaObjects.First().ThumbnailUrl : "/uploads/dummy.png" : _thumbnailUrl; }
             set { _thumbnailUrl = value; }
         }
         
         [InverseProperty("Offer")]
-        public virtual ICollection<Mediaobject> Mediaobjects { get; set; }
+        public virtual ICollection<Mediaobject> MediaObjects { get; set; }
 
         [InverseProperty("Offer")]
         public virtual ICollection<Tag> Tags { get; set; }
