@@ -24,6 +24,10 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public string OfficeAddress { get; set; }
         [JsonIgnore]
         public string Password { get; set; }
+
+        [NotMapped]
+        [JsonProperty("password")]
+        public string ReadPassword { get; set; }
         public string PhoneNumber { get; set; }
         public string ProfilePicture
         {
@@ -35,7 +39,7 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public DateTime? UpgradeDate { get; set; }
         public string ZipCode { get; set; }
         [JsonIgnore]
-        public sbyte? IsLocked { get; set; }
+        public bool? IsLocked { get; set; }
         [JsonIgnore]
         public int? LoginAttempts { get; set; }
 

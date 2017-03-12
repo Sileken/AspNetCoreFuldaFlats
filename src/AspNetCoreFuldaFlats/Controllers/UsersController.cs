@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AspNetCoreFuldaFlats.Constants;
 using AspNetCoreFuldaFlats.Database;
@@ -14,8 +13,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
@@ -32,11 +29,42 @@ namespace AspNetCoreFuldaFlats.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SignUp()
+        public async Task<IActionResult> SignUp([FromBody] User signUpInfo)
         {
-            return BadRequest();
-        }
+            IActionResult response = BadRequest();
 
+            try
+            {
+                var signUpError = await ValidateSignUpInfo(signUpInfo);
+                if (signUpError.HasError)
+                {
+                    response = BadRequest(signUpError);
+                }
+                else
+                {
+                    var user = new User
+                    {
+                        Password = GetPasswordHash(signUpInfo.ReadPassword),
+                        CreationDate = DateTime.Now,
+                        Type = UserConstants.UserTypes.Normal,
+                        AverageRating = 0,
+                        IsLocked = false
+                    };
+
+                    UpdateNormalUserProperties(user, signUpInfo);
+                    await PersistUser(user);
+                    await SignInUser(user);
+                    response = StatusCode(201, user);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
+        }
 
         [HttpPost("auth")]
         public async Task<IActionResult> SigIn([FromBody] SignInData signInData)
@@ -63,14 +91,14 @@ namespace AspNetCoreFuldaFlats.Controllers
                     {
                         var passwordHash = GetPasswordHash(password);
 
-                        if ((user.IsLocked != 1) && (user.Password == passwordHash))
+                        if ((user.IsLocked != true) && (user.Password == passwordHash))
                         {
                             await SignInUser(user);
                             await LoadUserRelationships(user);
                             user.LoginAttempts = 0;
                             response = Ok(user);
                         }
-                        else if (user.IsLocked != 1)
+                        else if (user.IsLocked != true)
                         {
                             user.LoginAttempts = user.LoginAttempts ?? 0;
                             if (user.LoginAttempts + 1 < UserConstants.MaxSignInAttempts)
@@ -80,12 +108,12 @@ namespace AspNetCoreFuldaFlats.Controllers
                             else
                             {
                                 user.LoginAttempts++;
-                                user.IsLocked = 1;
+                                user.IsLocked = true;
                                 response = StatusCode(423);
                             }
                         }
 
-                        await PersistUser(user);
+                        await UpdateUser(user);
                     }
                 }
                 catch (Exception ex)
@@ -97,7 +125,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             return response;
         }
-        
+
         [HttpDelete("auth")]
         public async Task<IActionResult> SignOut()
         {
@@ -169,7 +197,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                     {
                         landlordValidationInfo = await ValidateLandlordInfo(user, updateInfo);
                     }
-                    NormalUserUpdateError normalUserUpdateError = await ValidateNormalUserInfo(user, updateInfo, landlordValidationInfo);
+                    var normalUserUpdateError = await ValidateNormalUserInfo(user, updateInfo, landlordValidationInfo);
 
                     if (normalUserUpdateError.HasError)
                     {
@@ -183,7 +211,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                             UpdateLandlordProperties(user, updateInfo);
                         }
 
-                        await PersistUser(user);
+                        await UpdateUser(user);
                         await LoadUserRelationships(user);
 
                         await SignInUser(user);
@@ -206,7 +234,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         public async Task<IActionResult> UpgradeUser([FromBody] User upgradeInfo)
         {
             IActionResult response = BadRequest();
-            
+
             try
             {
                 var user = await GetCurrentUserFromDatabase();
@@ -221,13 +249,14 @@ namespace AspNetCoreFuldaFlats.Controllers
                     {
                         response = BadRequest(new LandlordUpdateError
                         {
-                            Upgrade = {[0] = "Unable to upgrade this user account."}
+                            Upgrade = new List<string> {"Unable to upgrade this user account."}
                         });
                     }
                     else
                     {
-                        LandlordUpdateError landlordValidationInfo = await ValidateUpgradeToLandlord(user, upgradeInfo);
-                        NormalUserUpdateError normalUserUpdateError = await ValidateNormalUserInfo(user, upgradeInfo, landlordValidationInfo);
+                        var landlordValidationInfo = await ValidateUpgradeToLandlord(user, upgradeInfo);
+                        var normalUserUpdateError =
+                            await ValidateNormalUserInfo(user, upgradeInfo, landlordValidationInfo);
                         if (normalUserUpdateError.HasError)
                         {
                             response = BadRequest(normalUserUpdateError);
@@ -237,7 +266,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                             UpdateNormalUserProperties(user, upgradeInfo);
                             UpdateLandlordProperties(user, upgradeInfo);
                             UpgradeUser(user, upgradeInfo);
-                            await PersistUser(user);
+                            await UpdateUser(user);
                             await LoadUserRelationships(user);
 
                             await SignInUser(user);
@@ -262,11 +291,12 @@ namespace AspNetCoreFuldaFlats.Controllers
         {
             IActionResult response = BadRequest();
 
-            if (string.IsNullOrWhiteSpace(changePasswordInfo.PasswordNew) || (changePasswordInfo.PasswordNew.Length < UserConstants.MinPasswordLength))
+            if (string.IsNullOrWhiteSpace(changePasswordInfo.PasswordNew) ||
+                (changePasswordInfo.PasswordNew.Length < UserConstants.MinPasswordLength))
             {
                 response = BadRequest(new ChangePasswordError
                 {
-                    Password = {[0] = "Invalid Password (please use at least 5 characters)."}
+                    Password = new List<string> {"Invalid Password (please use at least 5 characters)."}
                 });
             }
             else
@@ -277,19 +307,19 @@ namespace AspNetCoreFuldaFlats.Controllers
                     var newPasswordHash = GetPasswordHash(changePasswordInfo.PasswordNew);
 
                     var user = await _database.User.SingleOrDefaultAsync(
-                        u => u.Email == HttpContext.User.Identity.Name && u.Password == oldPasswordHash);
+                        u => (u.Email == HttpContext.User.Identity.Name) && (u.Password == oldPasswordHash));
 
                     if (user != null)
                     {
                         user.Password = newPasswordHash;
-                        await PersistUser(user);
+                        await UpdateUser(user);
                         response = StatusCode(204);
                     }
                     else
                     {
                         response = StatusCode(404, new ChangePasswordError
                         {
-                            Password = { [0] = "Invalid password." }
+                            Password = new List<string> {"Invalid password."}
                         });
                     }
                 }
@@ -319,9 +349,10 @@ namespace AspNetCoreFuldaFlats.Controllers
                     {
                         response = NotFound();
                     }
-                    else {
+                    else
+                    {
                         user.ProfilePicture = profilePictureData.Img;
-                        await PersistUser(user);
+                        await UpdateUser(user);
                         response = Ok(user);
                     }
                 }
@@ -336,7 +367,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         }
 
         #region Helper Functions
-        
+
         private async Task<User> GetCurrentUserFromDatabase(bool withRelationships = false)
         {
             User user;
@@ -353,18 +384,18 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 user = await _database.User.SingleOrDefaultAsync(u => u.Email == HttpContext.User.Identity.Name);
             }
-             
+
             return user;
         }
 
         private async Task LoadUserRelationships(User user)
         {
             await _database.Entry(user)
-                              .Collection(u => u.DatabaseFavorites)
-                              .Query()
-                              .Include(f => f.Offer).ThenInclude(o => o.Mediaobjects)
-                              .Include(f => f.Offer).ThenInclude(o => o.Tags)
-                              .LoadAsync();
+                .Collection(u => u.DatabaseFavorites)
+                .Query()
+                .Include(f => f.Offer).ThenInclude(o => o.Mediaobjects)
+                .Include(f => f.Offer).ThenInclude(o => o.Tags)
+                .LoadAsync();
 
             await _database.Entry(user).Collection(u => u.Offers)
                 .Query()
@@ -375,103 +406,174 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         private async Task PersistUser(User user)
         {
+            await _database.User.AddAsync(user);
+            await _database.SaveChangesAsync();
+        }
+
+        private async Task UpdateUser(User user)
+        {
             _database.User.Update(user);
             await _database.SaveChangesAsync();
         }
 
-        private async Task<LandlordUpdateError> ValidateLandlordInfo(User currentUser, User userInfo, LandlordUpdateError prefilledErrorInfo = null)
+        private async Task<LandlordUpdateError> ValidateLandlordInfo(User currentUser, User userInfo,
+            LandlordUpdateError prefilledErrorInfo = null)
         {
-            LandlordUpdateError updateError = prefilledErrorInfo as LandlordUpdateError ?? new LandlordUpdateError();
+            var updateError = prefilledErrorInfo ?? new LandlordUpdateError();
 
-            if (!string.IsNullOrWhiteSpace(userInfo.Email) && new EmailAddressAttribute().IsValid(userInfo.Email) == false)
+            if (!string.IsNullOrWhiteSpace(userInfo.Email) &&
+                (new EmailAddressAttribute().IsValid(userInfo.Email) == false))
             {
-                updateError.Email[0] = "Please enter a valid eMail.";
+                updateError.Email = new List<string> {"Please enter a valid eMail."};
                 updateError.HasError = true;
             }
-            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && userInfo.Email.ToLower() != currentUser.Email.ToLower() &&
-                      await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
+            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && (userInfo.Email.ToLower() != currentUser.Email.ToLower()) &&
+                     await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
             {
-                updateError.Email[0] = "Please enter a valid eMail. This eMail is not unique.";
+                updateError.Email = new List<string> {"Please enter a valid eMail. This eMail is not unique."};
                 updateError.HasError = true;
             }
 
             return updateError;
         }
 
-        private async Task<LandlordUpdateError> ValidateUpgradeToLandlord(User currentUser, User userInfo, LandlordUpdateError prefilledErrorInfo = null)
+        private async Task<LandlordUpdateError> ValidateUpgradeToLandlord(User currentUser, User userInfo,
+            LandlordUpdateError prefilledErrorInfo = null)
         {
-            LandlordUpdateError updateError = prefilledErrorInfo as LandlordUpdateError ?? new LandlordUpdateError();
+            var updateError = prefilledErrorInfo ?? new LandlordUpdateError();
 
             if (string.IsNullOrWhiteSpace(userInfo.PhoneNumber))
             {
-                updateError.PhoneNumber[0] = "Please enter a phone number.";
+                updateError.PhoneNumber = new List<string> {"Please enter a phone number.}"};
                 updateError.HasError = true;
             }
 
             if (string.IsNullOrWhiteSpace(userInfo.ZipCode))
             {
-                updateError.ZipCode[0] = "Please enter a zip code.";
+                updateError.ZipCode = new List<string> {"Please enter a zip code."};
                 updateError.HasError = true;
             }
 
             if (string.IsNullOrWhiteSpace(userInfo.City))
             {
-                updateError.City[0] = "Please enter a city.";
+                updateError.City = new List<string> {"Please enter a city."};
                 updateError.HasError = true;
             }
 
             if (string.IsNullOrWhiteSpace(userInfo.Street))
             {
-                updateError.Street[0] = "Please enter a street.";
+                updateError.Street = new List<string> {"Please enter a street."};
                 updateError.HasError = true;
             }
 
             if (string.IsNullOrWhiteSpace(userInfo.HouseNumber))
             {
-                updateError.HouseNumber[0] = "Please enter a house number.";
+                updateError.HouseNumber = new List<string> {"Please enter a house number."};
                 updateError.HasError = true;
             }
 
-            if (string.IsNullOrWhiteSpace(userInfo.Email) || new EmailAddressAttribute().IsValid(userInfo.Email) == false)
+            if (string.IsNullOrWhiteSpace(userInfo.Email) ||
+                (new EmailAddressAttribute().IsValid(userInfo.Email) == false))
             {
-                updateError.Email[0] = "Please enter a valid eMail.";
+                updateError.Email = new List<string> {"Please enter a valid eMail."};
                 updateError.HasError = true;
             }
-            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && userInfo.Email.ToLower() != currentUser.Email.ToLower() &&
-                      await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
+            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && (userInfo.Email.ToLower() != currentUser.Email.ToLower()) &&
+                     await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
             {
-                updateError.Email[0] = "Please enter a valid eMail. This eMail is not unique.";
+                updateError.Email = new List<string> {"Please enter a valid eMail. This eMail is not unique."};
                 updateError.HasError = true;
             }
 
             return updateError;
         }
 
-        private async Task<NormalUserUpdateError> ValidateNormalUserInfo(User currentUser, User userInfo, NormalUserUpdateError prefilledErrorInfo = null)
+        private async Task<NormalUserUpdateError> ValidateNormalUserInfo(User currentUser, User userInfo,
+            NormalUserUpdateError prefilledErrorInfo = null)
         {
-            NormalUserUpdateError updateError = prefilledErrorInfo ?? new NormalUserUpdateError();
-            
+            var updateError = prefilledErrorInfo ?? new NormalUserUpdateError();
+
             UserConstants.Genders gender;
             if (!string.IsNullOrWhiteSpace(userInfo.Gender) && !Enum.TryParse(userInfo.Gender, true, out gender))
             {
-                updateError.Gender[0] = $"Please enter a valid gender. {String.Join(",", Enum.GetNames(typeof(UserConstants.Genders)))}.";
+                updateError.Gender = new List<string>
+                {
+                    $"Please enter a valid gender. {string.Join(",", Enum.GetNames(typeof(UserConstants.Genders)))}."
+                };
                 updateError.HasError = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(userInfo.Email) && new EmailAddressAttribute().IsValid(userInfo.Email) == false)
+            if (!string.IsNullOrWhiteSpace(userInfo.Email) &&
+                (new EmailAddressAttribute().IsValid(userInfo.Email) == false))
             {
-                updateError.Email[0] = "Please enter a valid eMail.";
+                updateError.Email = new List<string> {"Please enter a valid eMail."};
                 updateError.HasError = true;
             }
-            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && userInfo.Email.ToLower() != currentUser.Email.ToLower() &&
-                      await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
+            else if (!string.IsNullOrWhiteSpace(userInfo.Email) && (userInfo.Email.ToLower() != currentUser.Email.ToLower()) &&
+                     await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
             {
-                updateError.Email[0] = "Please enter a valid eMail. This eMail is not unique.";
+                updateError.Email = new List<string> {"Please enter a valid eMail. This eMail is not unique."};
                 updateError.HasError = true;
             }
 
             return updateError;
         }
+
+        private async Task<SignUpError> ValidateSignUpInfo(User userInfo)
+        {
+            var updateError = new SignUpError();
+
+            if (string.IsNullOrWhiteSpace(userInfo.FirstName))
+            {
+                updateError.FirstName = new List<string> {"Please enter a first name."};
+                updateError.HasError = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(userInfo.LastName))
+            {
+                updateError.LastName = new List<string> {"Please enter a last name."};
+                updateError.HasError = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(userInfo.Email) ||
+                (new EmailAddressAttribute().IsValid(userInfo.Email) == false))
+            {
+                updateError.Email = new List<string> {"Please enter a valid eMail."};
+                updateError.HasError = true;
+            }
+            else if (!string.IsNullOrWhiteSpace(userInfo.Email) &&
+                     await _database.User.AnyAsync(u => u.Email == userInfo.Email.ToLower()))
+            {
+                updateError.Email = new List<string> {"Please enter a valid eMail. This eMail is not unique."};
+                updateError.HasError = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(userInfo.ReadPassword) ||
+                (userInfo.ReadPassword.Length < UserConstants.MinPasswordLength))
+            {
+                updateError.Password = new List<string> {"Password is too short."};
+                updateError.HasError = true;
+            }
+
+            if (!userInfo.Birthday.HasValue)
+            {
+                updateError.Birthday = new List<string> {"Please enter a birthday."};
+                updateError.HasError = true;
+            }
+
+            UserConstants.Genders gender;
+            if (string.IsNullOrWhiteSpace(userInfo.Gender) || !Enum.TryParse(userInfo.Gender, true, out gender))
+            {
+                updateError.Gender = new List<string>
+                {
+                    $"Please enter a valid gender. {string.Join(",", Enum.GetNames(typeof(UserConstants.Genders)))}."
+                };
+                updateError.HasError = true;
+            }
+
+            return updateError;
+        }
+
 
         private string MergeOfficeAddress(User user)
         {
@@ -511,7 +613,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         {
             currentUser.Type = UserConstants.UserTypes.Landlord;
             currentUser.UpgradeDate = DateTime.Now;
-            currentUser.AverageRating = 1;          
+            currentUser.AverageRating = 1;
         }
 
         private void UpdateNormalUserProperties(User currentUser, User updateInfo)
@@ -520,8 +622,8 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 currentUser.FirstName = updateInfo.FirstName;
             }
-            
-            if(!string.IsNullOrWhiteSpace(updateInfo.LastName))
+
+            if (!string.IsNullOrWhiteSpace(updateInfo.LastName))
             {
                 currentUser.LastName = updateInfo.LastName;
             }
@@ -577,13 +679,13 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             currentUser.OfficeAddress = MergeOfficeAddress(currentUser);
         }
-        
+
         private string GetPasswordHash(string plainPassword)
         {
             return Convert.ToBase64String(
-                            SHA512.Create()
-                                .ComputeHash(
-                                    Encoding.UTF8.GetBytes(UserConstants.PasswordSalt + plainPassword)));
+                SHA512.Create()
+                    .ComputeHash(
+                        Encoding.UTF8.GetBytes(UserConstants.PasswordSalt + plainPassword)));
         }
 
         private async Task SignInUser(User user)
@@ -610,7 +712,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 claimsPrincipal);
             HttpContext.User = claimsPrincipal;
         }
-        #endregion
 
+        #endregion
     }
 }

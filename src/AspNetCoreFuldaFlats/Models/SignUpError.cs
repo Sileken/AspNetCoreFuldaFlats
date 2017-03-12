@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace AspNetCoreFuldaFlats.Models
 {
-    public class ChangePasswordError
+    public class SignUpError : NormalUserUpdateError
     {
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<string> Password { get; set; }

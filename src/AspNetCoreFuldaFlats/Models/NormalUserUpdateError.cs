@@ -10,10 +10,15 @@ namespace AspNetCoreFuldaFlats.Models
     {
         [JsonIgnore]
         public bool HasError { get; set; } = false;
-        public string[] FirstName { get; set; } = new string[1];
-        public string[] LastName { get; set; } = new string[1];
-        public string[] Gender { get; set; } = new string[1];
-        public string[] Birthday { get; set; } = new string[1];
-        public string[] Email { get; set; } = new string[1];
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> FirstName { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> LastName { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> Gender { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> Birthday { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public List<string> Email { get; set; }
     }
 }
