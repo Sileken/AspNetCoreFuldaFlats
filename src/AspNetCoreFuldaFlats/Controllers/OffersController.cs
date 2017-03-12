@@ -25,11 +25,30 @@ namespace AspNetCoreFuldaFlats.Controllers
             _logger = logger;
         }
 
+        #region CRUD Offer
+        
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateOffer()
         {
-            return BadRequest();
+            IActionResult response = BadRequest();
+
+            try
+            {
+                var offer = new Offer();
+                offer.Landlord = int.Parse(HttpContext.User.GetUserId());
+                offer.Status = 0;
+                await _database.Offer.AddAsync(offer);
+                await _database.SaveChangesAsync();
+                response = Ok(offer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
         }
 
         [HttpGet("{offerId}")]
@@ -120,6 +139,10 @@ namespace AspNetCoreFuldaFlats.Controllers
             return sendStatus;
         }
 
+        #endregion
+
+        #region Search
+
         [HttpPost("search")]
         public async Task<IActionResult> SearchOffers()
         {
@@ -138,12 +161,14 @@ namespace AspNetCoreFuldaFlats.Controllers
             return BadRequest();
         }
 
+        #endregion
+
         #region Recent Favorites 
 
         [HttpGet("recent")]
         public async Task<IActionResult> GetRecentOffers()
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             try
             {
@@ -153,15 +178,15 @@ namespace AspNetCoreFuldaFlats.Controllers
                         .Include(o => o.MediaObjects)
                         .Take(10)
                         .ToListAsync();
-                sendStatus = Ok(offer);
+                response = Ok(offer);
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                sendStatus = StatusCode(500);
+                response = StatusCode(500);
             }
 
-            return sendStatus;
+            return response;
         }
 
         #endregion
@@ -172,7 +197,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         [HttpGet("{offerId}/review")]
         public async Task<IActionResult> GetOfferReviews(int offerId)
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             try
             {
@@ -181,34 +206,34 @@ namespace AspNetCoreFuldaFlats.Controllers
                 {
                     if ((offer.Status != 1) && (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
                     {
-                        sendStatus = Unauthorized();
+                        response = Unauthorized();
                     }
                     else
                     {
                         var reviews =
                             await _database.Review.Include(r => r.User).Where(r => r.OfferId == offerId).ToArrayAsync();
-                        sendStatus = Ok(reviews);
+                        response = Ok(reviews);
                     }
                 }
                 else
                 {
-                    sendStatus = NotFound();
+                    response = NotFound();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                sendStatus = StatusCode(500);
+                response = StatusCode(500);
             }
 
-            return sendStatus;
+            return response;
         }
 
         [Authorize]
         [HttpPost("{offerId}/review")]
         public async Task<IActionResult> CreateOfferReview([FromBody] Review review, [FromRoute] int offerId)
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             var userId = int.Parse(HttpContext.User.GetUserId());
 
@@ -243,7 +268,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                                 .SingleOrDefaultAsync(f => f.Id == offerId);
                     if (offer == null)
                     {
-                        sendStatus = NotFound();
+                        response = NotFound();
                     }
                     else if ((offer.OfferType == "FLAT") || (offer.OfferType == "SHARE"))
                     {
@@ -251,12 +276,12 @@ namespace AspNetCoreFuldaFlats.Controllers
                         {
                             "You can not post reviews for offer with type FLAT or SHARE"
                         };
-                        sendStatus = BadRequest(reviewError);
+                        response = BadRequest(reviewError);
                     }
                     else if (offer.Landlord == userId)
                     {
                         reviewError.OfferType = new List<string> {"You can not post reviews your own offer."};
-                        sendStatus = BadRequest(reviewError);
+                        response = BadRequest(reviewError);
                     }
                     else
                     {
@@ -285,21 +310,21 @@ namespace AspNetCoreFuldaFlats.Controllers
                         _database.User.Update(offerLandlord);
 
                         await _database.SaveChangesAsync();
-                        sendStatus = StatusCode(201);
+                        response = StatusCode(201);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    sendStatus = StatusCode(500);
+                    response = StatusCode(500);
                 }
             }
             else
             {
-                sendStatus = BadRequest(reviewError);
+                response = BadRequest(reviewError);
             }
 
-            return sendStatus;
+            return response;
         }
 
         #endregion
@@ -310,7 +335,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         [HttpPut("{offerId}/favorite")]
         public async Task<IActionResult> SetOfferAsFavorite(int offerId)
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             try
             {
@@ -325,16 +350,16 @@ namespace AspNetCoreFuldaFlats.Controllers
                         UserId = int.Parse(HttpContext.User.GetUserId())
                     });
                     await _database.SaveChangesAsync();
-                    sendStatus = StatusCode(201);
+                    response = StatusCode(201);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                sendStatus = StatusCode(500);
+                response = StatusCode(500);
             }
 
-            return sendStatus;
+            return response;
         }
 
 
@@ -342,7 +367,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         [HttpDelete("{offerId}/favorite")]
         public async Task<IActionResult> DeleteOfferFromFavorite(int offerId)
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             try
             {
@@ -354,16 +379,16 @@ namespace AspNetCoreFuldaFlats.Controllers
                 {
                     _database.Favorite.Remove(favorite);
                     await _database.SaveChangesAsync();
-                    sendStatus = Ok();
+                    response = Ok();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                sendStatus = StatusCode(500);
+                response = StatusCode(500);
             }
 
-            return sendStatus;
+            return response;
         }
 
         #endregion
