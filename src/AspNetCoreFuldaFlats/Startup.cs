@@ -17,11 +17,18 @@ namespace AspNetCoreFuldaFlats
 {
     public class Startup
     {
+        private IHostingEnvironment HostingEnvironment { get; }
+
+        public Startup(IHostingEnvironment env)
+        {
+            HostingEnvironment = env;
+        }
+        
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<WebApiDataContext>(options =>
             {
-                options.UseMySql("server=localhost;user id=root;database=fuldaflats;convertzerodatetime=True;");
+                options.UseMySql(HostingEnvironment.EnvironmentName == "azure" ? "server=127.0.0.1;userid=azure;password=6#vWHD_$;database=fuldaflats;Port=49761;convertzerodatetime=True" : "server=localhost;user id=root;database=fuldaflats;convertzerodatetime=True");
             });
 
             services.AddMvc().AddJsonOptions(options =>
