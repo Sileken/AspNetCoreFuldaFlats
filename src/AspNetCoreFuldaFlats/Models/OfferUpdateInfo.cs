@@ -1,19 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using AspNetCoreFuldaFlats.Constants;
-using Newtonsoft.Json;
 
-namespace AspNetCoreFuldaFlats.Database.Models
+namespace AspNetCoreFuldaFlats.Models
 {
-    public partial class Offer
+    public class OfferUpdateInfo
     {
-        private string _thumbnailUrl = string.Empty;
-
-        [Key]
         public int Id { get; set; }
         public bool? Accessability { get; set; }
         public string BathroomDescription { get; set; }
@@ -21,7 +13,6 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public bool? Cellar { get; set; }
         public string City { get; set; }
         public double? Commission { get; set; }
-        public DateTime? CreationDate { get; set; }
         public double? Deposit { get; set; }
         public string Description { get; set; }
         public bool? Dryer { get; set; }
@@ -34,14 +25,6 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public int? InternetSpeed { get; set; }
         public string KitchenDescription { get; set; }
         public bool? Lan { get; set; }
-
-        [JsonIgnore]
-        public int? Landlord { get; set; }
-
-        [JsonProperty("landlord")]
-        [ForeignKey("Landlord")]
-        public virtual User DatabaseLandlord { get; set; }
-
         public DateTime? LastModified { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
@@ -59,22 +42,9 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public bool? Telephone { get; set; }
         public string Television { get; set; }
         public string Title { get; set; }
-        public double? UniDistance { get; set; }
         public bool? WashingMachine { get; set; }
         public bool? Wlan { get; set; }
         public string ZipCode { get; set; }
-
-        [NotMapped]
-        public string ThumbnailUrl
-        {
-            get { return string.IsNullOrWhiteSpace(_thumbnailUrl) ? MediaObjects?.Count > 0 ? MediaObjects.First().ThumbnailUrl : GlobalConstants.DefaultThumbnailUrl : _thumbnailUrl; }
-            set { _thumbnailUrl = value; }
-        }
-        
-        [InverseProperty("Offer")]
-        public virtual ICollection<Mediaobject> MediaObjects { get; set; }
-
-        [InverseProperty("Offer")]
-        public virtual ICollection<Tag> Tags { get; set; }
+        public List<string> Tags { get; set; }
     }
 }

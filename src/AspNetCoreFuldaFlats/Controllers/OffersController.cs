@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using AspNetCoreFuldaFlats.Constants;
 using AspNetCoreFuldaFlats.Database;
 using AspNetCoreFuldaFlats.Database.Models;
 using AspNetCoreFuldaFlats.Extensions;
 using AspNetCoreFuldaFlats.Models;
+using GeoCoordinatePortable;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
@@ -26,7 +32,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         }
 
         #region CRUD Offer
-        
+
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateOffer()
@@ -37,10 +43,17 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 var offer = new Offer();
                 offer.Landlord = int.Parse(HttpContext.User.GetUserId());
-                offer.Status = 0;
-                await _database.Offer.AddAsync(offer);
-                await _database.SaveChangesAsync();
-                response = Ok(offer);
+                offer.Status = (int) GlobalConstants.OfferStatus.Inactive;
+                offer.CreationDate = DateTime.Now;
+                await PersistOffer(offer);
+
+                Offer reloadedOffer = await _database.Offer
+                    .Include(o => o.DatabaseLandlord)
+                    .Include(o => o.MediaObjects)
+                    .Include(o => o.Tags)
+                    .SingleOrDefaultAsync(o => o.Id == offer.Id);
+
+                response = Ok(reloadedOffer);
             }
             catch (Exception ex)
             {
@@ -54,52 +67,104 @@ namespace AspNetCoreFuldaFlats.Controllers
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOffer(int offerId)
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             try
             {
                 var offer = await _database.Offer
                     .Include(o => o.DatabaseLandlord)
                     .Include(o => o.MediaObjects)
+                    .Include(o => o.Tags)
                     .SingleOrDefaultAsync(o => o.Id == offerId);
 
                 if (offer != null)
                 {
-                    if ((offer.Status != 1) && (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
+                    if ((offer.Status != (int) GlobalConstants.OfferStatus.Active) &&
+                        (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
                     {
-                        sendStatus = Unauthorized();
+                        response = Unauthorized();
                     }
                     else
                     {
-                        sendStatus = Ok(offer);
+                        //hot fix for client offer details page
+                        if (offer.MediaObjects == null || offer.MediaObjects.Count == 0)
+                        {
+                            offer.MediaObjects = new List<Mediaobject> { new Mediaobject
+                            {
+                                MainUrl = GlobalConstants.DefaultThumbnailUrl,
+                                ThumbnailUrl = GlobalConstants.DefaultThumbnailUrl
+                            }};
+                        }
+                        response = Ok(offer);
                     }
                 }
                 else
                 {
-                    sendStatus = NotFound();
+                    response = NotFound();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                sendStatus = StatusCode(500);
+                response = StatusCode(500);
             }
 
-            return sendStatus;
+            return response;
         }
 
         [Authorize]
         [HttpPut("{offerId}")]
-        public async Task<IActionResult> UpdateOffer(int offerId)
+        public async Task<IActionResult> UpdateOffer(int offerId, [FromBody] OfferUpdateInfo offerUpdateInfo)
         {
-            return BadRequest();
+            IActionResult response = BadRequest();
+
+            try
+            {
+                var offer = await _database.Offer
+                    .SingleOrDefaultAsync(o => o.Id == offerId);
+
+                if (offer != null)
+                {
+                    if ((offer.Status != (int) GlobalConstants.OfferStatus.Active) &&
+                        (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
+                    {
+                        response = Unauthorized();
+                    }
+                    else
+                    {
+                        var offerUpdateInfoError = ValidateOfferUpdateInfo(offer, offerUpdateInfo);
+                        if (offerUpdateInfoError.HasError)
+                        {
+                            response = BadRequest(offerUpdateInfoError);
+                        }
+                        else
+                        {
+                            await UpdateOfferProperties(offer, offerUpdateInfo);
+                            await UpdateOffer(offer);
+                            await CreateOffereRelatedTags(offer, offerUpdateInfo);
+                            response = Ok();
+                        }
+                    }
+                }
+                else
+                {
+                    response = NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
         }
 
         [Authorize]
         [HttpDelete("{offerId}")]
         public async Task<IActionResult> DeleteOffer(int offerId)
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             try
             {
@@ -108,22 +173,22 @@ namespace AspNetCoreFuldaFlats.Controllers
                 {
                     if (offer.Landlord != int.Parse(HttpContext.User.GetUserId()))
                     {
-                        sendStatus = StatusCode(401,
-                        new DeleteOfferError
-                        {
-                            Offer = new List<string> { "You can only delete your own offers." }
-                        });
+                        response = StatusCode(401,
+                            new DeleteOfferError
+                            {
+                                Offer = new List<string> {"You can only delete your own offers."}
+                            });
                     }
                     else
                     {
                         _database.Remove(offer);
                         await _database.SaveChangesAsync();
-                        sendStatus = StatusCode(204);
+                        response = StatusCode(204);
                     }
                 }
                 else
                 {
-                    sendStatus = NotFound(
+                    response = NotFound(
                         new DeleteOfferError
                         {
                             Offer = new List<string> {"The offer was not found."}
@@ -133,10 +198,10 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                sendStatus = StatusCode(500);
+                response = StatusCode(500);
             }
 
-            return sendStatus;
+            return response;
         }
 
         #endregion
@@ -163,7 +228,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         #endregion
 
-        #region Recent Favorites 
+        #region Recent Offers 
 
         [HttpGet("recent")]
         public async Task<IActionResult> GetRecentOffers()
@@ -173,9 +238,12 @@ namespace AspNetCoreFuldaFlats.Controllers
             try
             {
                 var offer = await
-                    _database.Offer.OrderByDescending(o => o.CreationDate)
+                    _database.Offer
+                        .Where(o => o.Status == (int)GlobalConstants.OfferStatus.Active)
+                        .OrderByDescending(o => o.CreationDate)
                         .Include(o => o.DatabaseLandlord)
                         .Include(o => o.MediaObjects)
+                        .Include(o => o.Tags)
                         .Take(10)
                         .ToListAsync();
                 response = Ok(offer);
@@ -392,5 +460,312 @@ namespace AspNetCoreFuldaFlats.Controllers
         }
 
         #endregion
+
+        #region Helper Functions
+
+        private async Task UpdateOffer(Offer offer)
+        {
+            _database.Offer.Update(offer);
+            await _database.SaveChangesAsync();
+        }
+
+        private async Task PersistOffer(Offer offer)
+        {
+            await _database.Offer.AddAsync(offer);
+            await _database.SaveChangesAsync();
+        }
+
+        private OfferUpdateError ValidateOfferUpdateInfo(Offer currentOffer, OfferUpdateInfo offerUpdateInfo)
+        {
+            OfferUpdateError offerUpdateError = new OfferUpdateError();
+
+            if (offerUpdateInfo == null)
+            {
+                offerUpdateError.Id = new List<string> {"Offer update data are invalid."};
+                offerUpdateError.HasError = true;
+            }
+            //else
+            //{
+                // Client does not send always the id
+                //if (currentOffer.Id != offerUpdateInfo.Id)
+                //{
+                //    offerUpdateError.Id = new List<string>
+                //    {
+                //        "Offer id in the url query and post object are not equivalent."
+                //    };
+                //    offerUpdateError.HasError = true;
+                //}
+            //}
+
+            return offerUpdateError;
+        }
+
+        private async Task UpdateOfferProperties(Offer currentOffer, OfferUpdateInfo offerUpdateInfo)
+        {
+            if (offerUpdateInfo.Accessability != null || currentOffer.Accessability == null)
+            {
+                currentOffer.Accessability = offerUpdateInfo.Accessability == true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.BathroomDescription))
+            {
+                currentOffer.BathroomDescription = offerUpdateInfo.BathroomDescription;
+            }
+
+            if (offerUpdateInfo.BathroomNumber != null || currentOffer.BathroomNumber == null)
+            {
+                currentOffer.BathroomNumber = offerUpdateInfo.BathroomNumber ?? 0;
+            }
+
+            if (offerUpdateInfo.Cellar != null || currentOffer.Cellar == null)
+            {
+                currentOffer.Cellar = offerUpdateInfo.Cellar == true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.City))
+            {
+                currentOffer.City = offerUpdateInfo.City;
+            }
+
+            if (offerUpdateInfo.Commission != null || currentOffer.Commission == null)
+            {
+                currentOffer.Commission = offerUpdateInfo.Commission ?? 0;
+            }
+
+            if (offerUpdateInfo.Deposit != null || currentOffer.Deposit == null)
+            {
+                currentOffer.Deposit = offerUpdateInfo.Deposit ?? 0;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.Description))
+            {
+                currentOffer.Description = offerUpdateInfo.Description;
+            }
+
+            if (offerUpdateInfo.Dryer != null || currentOffer.Dryer == null)
+            {
+                currentOffer.Dryer = offerUpdateInfo.Dryer == true;
+            }
+
+            if (offerUpdateInfo.Elevator != null || currentOffer.Elevator == null)
+            {
+                currentOffer.Elevator = offerUpdateInfo.Elevator == true;
+            }
+
+            if (offerUpdateInfo.Floor != null || currentOffer.Floor == null)
+            {
+                currentOffer.Floor = offerUpdateInfo.Floor ?? 0;
+            }
+
+            if (offerUpdateInfo.Furnished != null || currentOffer.Furnished == null)
+            {
+                currentOffer.Furnished = offerUpdateInfo.Furnished == true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.HeatingDescription))
+            {
+                currentOffer.HeatingDescription = offerUpdateInfo.HeatingDescription;
+            }
+
+            if (offerUpdateInfo.HouseNumber != null)
+            {
+                currentOffer.HouseNumber = offerUpdateInfo.HouseNumber ?? 0;
+            }
+
+            if (offerUpdateInfo.InternetSpeed != null || currentOffer.InternetSpeed == null)
+            {
+                currentOffer.InternetSpeed = offerUpdateInfo.InternetSpeed ?? 0;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.KitchenDescription))
+            {
+                currentOffer.KitchenDescription = offerUpdateInfo.KitchenDescription;
+            }
+
+            if (offerUpdateInfo.Lan != null || currentOffer.Lan == null)
+            {
+                currentOffer.Lan = offerUpdateInfo.Lan == true;
+            }
+
+            currentOffer.LastModified = DateTime.Now;
+
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.OfferType))
+            {
+                currentOffer.OfferType = offerUpdateInfo.OfferType;
+            }
+
+            if (offerUpdateInfo.Parking != null || currentOffer.Parking == null)
+            {
+                currentOffer.Parking = offerUpdateInfo.Parking == true;
+            }
+
+            if (offerUpdateInfo.Pets != null || currentOffer.Pets == null)
+            {
+                currentOffer.Pets = offerUpdateInfo.Pets == true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.PriceType))
+            {
+                currentOffer.PriceType = offerUpdateInfo.PriceType;
+            }
+
+            if (offerUpdateInfo.Rent != null || currentOffer.Rent == null)
+            {
+                currentOffer.Rent = offerUpdateInfo.Rent ?? 0;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.RentType))
+            {
+                currentOffer.RentType = offerUpdateInfo.RentType;
+            }
+
+            if (offerUpdateInfo.Rooms != null || currentOffer.Rooms == null)
+            {
+                currentOffer.Rooms = offerUpdateInfo.Rooms ?? 0;
+            }
+
+            if (offerUpdateInfo.SideCosts != null || currentOffer.SideCosts == null)
+            {
+                currentOffer.SideCosts = offerUpdateInfo.SideCosts ?? 0;
+            }
+
+            if (offerUpdateInfo.Size != null || currentOffer.Size == null)
+            {
+                currentOffer.Size = offerUpdateInfo.Size ?? 0;
+            }
+
+            if (offerUpdateInfo.Status != null || currentOffer.Status == null)
+            {
+                currentOffer.Status = offerUpdateInfo.Status ?? 0;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.Street))
+            {
+                currentOffer.Street = offerUpdateInfo.Street;
+            }
+
+            if (offerUpdateInfo.Telephone != null || currentOffer.Telephone == null)
+            {
+                currentOffer.Telephone = offerUpdateInfo.Telephone == true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.Television))
+            {
+                currentOffer.Television = offerUpdateInfo.Television;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.Title))
+            {
+                currentOffer.Title = offerUpdateInfo.Title;
+            }
+
+            if (offerUpdateInfo.WashingMachine != null || currentOffer.WashingMachine == null)
+            {
+                currentOffer.WashingMachine = offerUpdateInfo.WashingMachine == true;
+            }
+
+            if (offerUpdateInfo.Wlan != null || currentOffer.Wlan == null)
+            {
+                currentOffer.Wlan = offerUpdateInfo.Wlan == true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offerUpdateInfo.ZipCode))
+            {
+                currentOffer.ZipCode = offerUpdateInfo.ZipCode;
+            }
+
+            if (offerUpdateInfo.Status != null &&
+                ((int[]) Enum.GetValues(typeof(GlobalConstants.OfferStatus))).Any(i => i == offerUpdateInfo.Status))
+            {
+                currentOffer.Status = offerUpdateInfo.Status;
+            }
+
+            if (offerUpdateInfo.FullPrice != null || currentOffer.FullPrice == null)
+            {
+                var fullPrice = 0;
+
+                if (offerUpdateInfo.Rent != null)
+                {
+                    fullPrice += (int) offerUpdateInfo.Rent;
+                }
+                if (offerUpdateInfo.SideCosts != null)
+                {
+                    fullPrice += (int) offerUpdateInfo.SideCosts;
+                }
+
+                currentOffer.FullPrice = fullPrice;
+            }
+
+            if (!string.IsNullOrWhiteSpace(currentOffer.Street) && currentOffer.HouseNumber != null &&
+                !string.IsNullOrWhiteSpace(currentOffer.ZipCode) && !string.IsNullOrWhiteSpace(currentOffer.City) &&
+                currentOffer.UniDistance == null)
+            {
+                try
+                {
+                    GeoCoordinate coordinate = await GetOfferGeoCoordinates(currentOffer);
+                    if (coordinate != null)
+                    {
+                        currentOffer.Latitude = coordinate.Latitude;
+                        currentOffer.Longitude = coordinate.Longitude;
+                        currentOffer.UniDistance = Math.Round((coordinate.GetDistanceTo(GlobalConstants.HsFuldaCoordinate) / 1000) * 100) / 100;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Error while requesting offer geo coordinate", ex);
+                }
+            }           
+        }
+
+        private async Task CreateOffereRelatedTags(Offer currentOffer, OfferUpdateInfo offerUpdateInfo)
+        {
+            var addedTag = false;
+
+            foreach (var tag in offerUpdateInfo.Tags)
+            {
+                if (!await _database.Tag.AnyAsync(t => t.OfferId == currentOffer.Id && t.Title == tag))
+                {
+                    await _database.Tag.AddAsync(new Tag { OfferId = currentOffer.Id, Title = tag });
+                    addedTag = true;
+                }
+            }
+
+            if (addedTag)
+            {
+                await _database.SaveChangesAsync();
+            }
+        }
+
+        private async Task<GeoCoordinate> GetOfferGeoCoordinates(Offer offer)
+        {
+            GeoCoordinate offerCoordinate = null;
+
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders
+                .Accept
+                .Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            var requestUrl =
+                $"{GlobalConstants.OpenStreetMapSearchApi.TrimEnd('/')}?street={UrlEncoder.Default.Encode($"{offer.Street} {offer.HouseNumber}")}&postalcode={UrlEncoder.Default.Encode(offer.ZipCode)}&city={UrlEncoder.Default.Encode(offer.City)}&format=json";
+
+            HttpResponseMessage response = await client.GetAsync(requestUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                string responseBody = await response.Content.ReadAsStringAsync();
+                List<OpenStreetMapSearchResult> openStreetMapSearchResults = JsonConvert.DeserializeObject<List<OpenStreetMapSearchResult>>(responseBody);
+                if (openStreetMapSearchResults != null && openStreetMapSearchResults.Count > 0)
+                {
+                    OpenStreetMapSearchResult openStreetMapSearchResult = openStreetMapSearchResults.First();
+                    offerCoordinate = new GeoCoordinate(openStreetMapSearchResult.Lat, openStreetMapSearchResult.Lon);
+                }
+            }
+
+            return offerCoordinate;
+        }
+
+        #endregion
+
     }
 }

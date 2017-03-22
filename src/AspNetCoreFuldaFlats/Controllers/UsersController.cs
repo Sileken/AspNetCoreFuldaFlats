@@ -575,7 +575,6 @@ namespace AspNetCoreFuldaFlats.Controllers
             return updateError;
         }
 
-
         private string MergeOfficeAddress(User user)
         {
             var officeAddresse = string.Empty;
