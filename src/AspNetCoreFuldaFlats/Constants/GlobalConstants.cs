@@ -28,5 +28,7 @@ namespace AspNetCoreFuldaFlats.Constants
         public static GeoCoordinate HsFuldaCoordinate = new GeoCoordinate(50.5648258, 9.6842798);
 
         public static string DefaultThumbnailUrl = "/uploads/dummy.png";
+
+        public static string SearchParamtersSessionkey = "LastSearchParamters";
     }
 }

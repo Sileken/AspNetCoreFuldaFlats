@@ -11,6 +11,8 @@
         "Pomelo.EntityFrameworkCore.MySql.Design": "1.1.0",
         "Microsoft.AspNetCore.Server.IISIntegration": "1.1.0",
         "Microsoft.Extensions.Configuration.CommandLine": "1.0.0",
+        "Microsoft.AspNetCore.Session": "1.1.0",
+        "Microsoft.Extensions.Caching.Memory": "1.1.0",
         "GeoCoordinate.NetCore": "1.0.0.1"
     },
 

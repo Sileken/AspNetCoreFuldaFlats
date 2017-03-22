@@ -30,11 +30,14 @@ namespace AspNetCoreFuldaFlats
             {
                 options.UseMySql(HostingEnvironment.EnvironmentName == "azure" ? "server=127.0.0.1;userid=azure;password=6#vWHD_$;database=fuldaflats;Port=49761;convertzerodatetime=True" : "server=localhost;user id=root;database=fuldaflats;convertzerodatetime=True");
             });
-
+            
             services.AddMvc().AddJsonOptions(options =>
             {
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
+
+            services.AddDistributedMemoryCache();
+            services.AddSession();
         } 
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -63,6 +66,8 @@ namespace AspNetCoreFuldaFlats
             Path.Combine(Directory.GetCurrentDirectory(), @"Uploads")),
                 RequestPath = new PathString("/uploads")
             });
+
+            app.UseSession();
 
             app.UseMvc();
         }

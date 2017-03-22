@@ -12,6 +12,7 @@ using AspNetCoreFuldaFlats.Extensions;
 using AspNetCoreFuldaFlats.Models;
 using GeoCoordinatePortable;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -31,6 +32,37 @@ namespace AspNetCoreFuldaFlats.Controllers
             _logger = logger;
         }
 
+        #region Recent Offers 
+
+        [HttpGet("recent")]
+        public async Task<IActionResult> GetRecentOffers()
+        {
+            IActionResult response = BadRequest();
+
+            try
+            {
+                var offer = await
+                    _database.Offer
+                        .Where(o => o.Status == (int) GlobalConstants.OfferStatus.Active)
+                        .OrderByDescending(o => o.CreationDate)
+                        .Include(o => o.DatabaseLandlord)
+                        .Include(o => o.MediaObjects)
+                        .Include(o => o.Tags)
+                        .Take(10)
+                        .ToListAsync();
+                response = Ok(offer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
+        }
+
+        #endregion
+
         #region CRUD Offer
 
         [Authorize]
@@ -47,7 +79,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 offer.CreationDate = DateTime.Now;
                 await PersistOffer(offer);
 
-                Offer reloadedOffer = await _database.Offer
+                var reloadedOffer = await _database.Offer
                     .Include(o => o.DatabaseLandlord)
                     .Include(o => o.MediaObjects)
                     .Include(o => o.Tags)
@@ -87,13 +119,16 @@ namespace AspNetCoreFuldaFlats.Controllers
                     else
                     {
                         //hot fix for client offer details page
-                        if (offer.MediaObjects == null || offer.MediaObjects.Count == 0)
+                        if ((offer.MediaObjects == null) || (offer.MediaObjects.Count == 0))
                         {
-                            offer.MediaObjects = new List<Mediaobject> { new Mediaobject
+                            offer.MediaObjects = new List<Mediaobject>
                             {
-                                MainUrl = GlobalConstants.DefaultThumbnailUrl,
-                                ThumbnailUrl = GlobalConstants.DefaultThumbnailUrl
-                            }};
+                                new Mediaobject
+                                {
+                                    MainUrl = GlobalConstants.DefaultThumbnailUrl,
+                                    ThumbnailUrl = GlobalConstants.DefaultThumbnailUrl
+                                }
+                            };
                         }
                         response = Ok(offer);
                     }
@@ -209,29 +244,34 @@ namespace AspNetCoreFuldaFlats.Controllers
         #region Search
 
         [HttpPost("search")]
-        public async Task<IActionResult> SearchOffers()
+        public IActionResult SearchOffers([FromBody] SearchParamaters searchParamaters)
         {
-            return BadRequest();
+            IActionResult response = BadRequest();
+
+            try
+            {
+                if (searchParamaters == null)
+                {
+                    BadRequest("Invalid search parameters");
+                }
+                else
+                {
+                    HttpContext.Session.SetString(GlobalConstants.SearchParamtersSessionkey,
+                        JsonConvert.SerializeObject(searchParamaters));
+                    response = StatusCode(204);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
         }
 
         [HttpGet("search")]
         public async Task<IActionResult> GetLastSearchResult()
-        {
-            return BadRequest();
-        }
-
-        [HttpGet("search/last")]
-        public async Task<IActionResult> GetLastSearchParameter()
-        {
-            return BadRequest();
-        }
-
-        #endregion
-
-        #region Recent Offers 
-
-        [HttpGet("recent")]
-        public async Task<IActionResult> GetRecentOffers()
         {
             IActionResult response = BadRequest();
 
@@ -239,7 +279,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 var offer = await
                     _database.Offer
-                        .Where(o => o.Status == (int)GlobalConstants.OfferStatus.Active)
+                        .Where(o => o.Status == (int) GlobalConstants.OfferStatus.Active)
                         .OrderByDescending(o => o.CreationDate)
                         .Include(o => o.DatabaseLandlord)
                         .Include(o => o.MediaObjects)
@@ -247,6 +287,34 @@ namespace AspNetCoreFuldaFlats.Controllers
                         .Take(10)
                         .ToListAsync();
                 response = Ok(offer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
+        }
+
+        [HttpGet("search/last")]
+        public IActionResult GetLastSearchParameter()
+        {
+            IActionResult response = BadRequest();
+
+            try
+            {
+                var lastSearchParameterString = HttpContext.Session.GetString(GlobalConstants.SearchParamtersSessionkey);
+                if (string.IsNullOrWhiteSpace(lastSearchParameterString))
+                {
+                    response = NotFound();
+                }
+                else
+                {
+                    SearchParamaters lastSearchParamaters =
+                        JsonConvert.DeserializeObject<SearchParamaters>(lastSearchParameterString);
+                    response = Ok(lastSearchParamaters);
+                }
             }
             catch (Exception ex)
             {
@@ -477,7 +545,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         private OfferUpdateError ValidateOfferUpdateInfo(Offer currentOffer, OfferUpdateInfo offerUpdateInfo)
         {
-            OfferUpdateError offerUpdateError = new OfferUpdateError();
+            var offerUpdateError = new OfferUpdateError();
 
             if (offerUpdateInfo == null)
             {
@@ -486,15 +554,15 @@ namespace AspNetCoreFuldaFlats.Controllers
             }
             //else
             //{
-                // Client does not send always the id
-                //if (currentOffer.Id != offerUpdateInfo.Id)
-                //{
-                //    offerUpdateError.Id = new List<string>
-                //    {
-                //        "Offer id in the url query and post object are not equivalent."
-                //    };
-                //    offerUpdateError.HasError = true;
-                //}
+            // Client does not send always the id
+            //if (currentOffer.Id != offerUpdateInfo.Id)
+            //{
+            //    offerUpdateError.Id = new List<string>
+            //    {
+            //        "Offer id in the url query and post object are not equivalent."
+            //    };
+            //    offerUpdateError.HasError = true;
+            //}
             //}
 
             return offerUpdateError;
@@ -502,7 +570,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         private async Task UpdateOfferProperties(Offer currentOffer, OfferUpdateInfo offerUpdateInfo)
         {
-            if (offerUpdateInfo.Accessability != null || currentOffer.Accessability == null)
+            if ((offerUpdateInfo.Accessability != null) || (currentOffer.Accessability == null))
             {
                 currentOffer.Accessability = offerUpdateInfo.Accessability == true;
             }
@@ -512,12 +580,12 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.BathroomDescription = offerUpdateInfo.BathroomDescription;
             }
 
-            if (offerUpdateInfo.BathroomNumber != null || currentOffer.BathroomNumber == null)
+            if ((offerUpdateInfo.BathroomNumber != null) || (currentOffer.BathroomNumber == null))
             {
                 currentOffer.BathroomNumber = offerUpdateInfo.BathroomNumber ?? 0;
             }
 
-            if (offerUpdateInfo.Cellar != null || currentOffer.Cellar == null)
+            if ((offerUpdateInfo.Cellar != null) || (currentOffer.Cellar == null))
             {
                 currentOffer.Cellar = offerUpdateInfo.Cellar == true;
             }
@@ -527,12 +595,12 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.City = offerUpdateInfo.City;
             }
 
-            if (offerUpdateInfo.Commission != null || currentOffer.Commission == null)
+            if ((offerUpdateInfo.Commission != null) || (currentOffer.Commission == null))
             {
                 currentOffer.Commission = offerUpdateInfo.Commission ?? 0;
             }
 
-            if (offerUpdateInfo.Deposit != null || currentOffer.Deposit == null)
+            if ((offerUpdateInfo.Deposit != null) || (currentOffer.Deposit == null))
             {
                 currentOffer.Deposit = offerUpdateInfo.Deposit ?? 0;
             }
@@ -542,22 +610,22 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.Description = offerUpdateInfo.Description;
             }
 
-            if (offerUpdateInfo.Dryer != null || currentOffer.Dryer == null)
+            if ((offerUpdateInfo.Dryer != null) || (currentOffer.Dryer == null))
             {
                 currentOffer.Dryer = offerUpdateInfo.Dryer == true;
             }
 
-            if (offerUpdateInfo.Elevator != null || currentOffer.Elevator == null)
+            if ((offerUpdateInfo.Elevator != null) || (currentOffer.Elevator == null))
             {
                 currentOffer.Elevator = offerUpdateInfo.Elevator == true;
             }
 
-            if (offerUpdateInfo.Floor != null || currentOffer.Floor == null)
+            if ((offerUpdateInfo.Floor != null) || (currentOffer.Floor == null))
             {
                 currentOffer.Floor = offerUpdateInfo.Floor ?? 0;
             }
 
-            if (offerUpdateInfo.Furnished != null || currentOffer.Furnished == null)
+            if ((offerUpdateInfo.Furnished != null) || (currentOffer.Furnished == null))
             {
                 currentOffer.Furnished = offerUpdateInfo.Furnished == true;
             }
@@ -572,7 +640,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.HouseNumber = offerUpdateInfo.HouseNumber ?? 0;
             }
 
-            if (offerUpdateInfo.InternetSpeed != null || currentOffer.InternetSpeed == null)
+            if ((offerUpdateInfo.InternetSpeed != null) || (currentOffer.InternetSpeed == null))
             {
                 currentOffer.InternetSpeed = offerUpdateInfo.InternetSpeed ?? 0;
             }
@@ -582,7 +650,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.KitchenDescription = offerUpdateInfo.KitchenDescription;
             }
 
-            if (offerUpdateInfo.Lan != null || currentOffer.Lan == null)
+            if ((offerUpdateInfo.Lan != null) || (currentOffer.Lan == null))
             {
                 currentOffer.Lan = offerUpdateInfo.Lan == true;
             }
@@ -595,12 +663,12 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.OfferType = offerUpdateInfo.OfferType;
             }
 
-            if (offerUpdateInfo.Parking != null || currentOffer.Parking == null)
+            if ((offerUpdateInfo.Parking != null) || (currentOffer.Parking == null))
             {
                 currentOffer.Parking = offerUpdateInfo.Parking == true;
             }
 
-            if (offerUpdateInfo.Pets != null || currentOffer.Pets == null)
+            if ((offerUpdateInfo.Pets != null) || (currentOffer.Pets == null))
             {
                 currentOffer.Pets = offerUpdateInfo.Pets == true;
             }
@@ -610,7 +678,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.PriceType = offerUpdateInfo.PriceType;
             }
 
-            if (offerUpdateInfo.Rent != null || currentOffer.Rent == null)
+            if ((offerUpdateInfo.Rent != null) || (currentOffer.Rent == null))
             {
                 currentOffer.Rent = offerUpdateInfo.Rent ?? 0;
             }
@@ -620,22 +688,22 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.RentType = offerUpdateInfo.RentType;
             }
 
-            if (offerUpdateInfo.Rooms != null || currentOffer.Rooms == null)
+            if ((offerUpdateInfo.Rooms != null) || (currentOffer.Rooms == null))
             {
                 currentOffer.Rooms = offerUpdateInfo.Rooms ?? 0;
             }
 
-            if (offerUpdateInfo.SideCosts != null || currentOffer.SideCosts == null)
+            if ((offerUpdateInfo.SideCosts != null) || (currentOffer.SideCosts == null))
             {
                 currentOffer.SideCosts = offerUpdateInfo.SideCosts ?? 0;
             }
 
-            if (offerUpdateInfo.Size != null || currentOffer.Size == null)
+            if ((offerUpdateInfo.Size != null) || (currentOffer.Size == null))
             {
                 currentOffer.Size = offerUpdateInfo.Size ?? 0;
             }
 
-            if (offerUpdateInfo.Status != null || currentOffer.Status == null)
+            if ((offerUpdateInfo.Status != null) || (currentOffer.Status == null))
             {
                 currentOffer.Status = offerUpdateInfo.Status ?? 0;
             }
@@ -645,7 +713,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.Street = offerUpdateInfo.Street;
             }
 
-            if (offerUpdateInfo.Telephone != null || currentOffer.Telephone == null)
+            if ((offerUpdateInfo.Telephone != null) || (currentOffer.Telephone == null))
             {
                 currentOffer.Telephone = offerUpdateInfo.Telephone == true;
             }
@@ -660,12 +728,12 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.Title = offerUpdateInfo.Title;
             }
 
-            if (offerUpdateInfo.WashingMachine != null || currentOffer.WashingMachine == null)
+            if ((offerUpdateInfo.WashingMachine != null) || (currentOffer.WashingMachine == null))
             {
                 currentOffer.WashingMachine = offerUpdateInfo.WashingMachine == true;
             }
 
-            if (offerUpdateInfo.Wlan != null || currentOffer.Wlan == null)
+            if ((offerUpdateInfo.Wlan != null) || (currentOffer.Wlan == null))
             {
                 currentOffer.Wlan = offerUpdateInfo.Wlan == true;
             }
@@ -675,13 +743,13 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.ZipCode = offerUpdateInfo.ZipCode;
             }
 
-            if (offerUpdateInfo.Status != null &&
+            if ((offerUpdateInfo.Status != null) &&
                 ((int[]) Enum.GetValues(typeof(GlobalConstants.OfferStatus))).Any(i => i == offerUpdateInfo.Status))
             {
                 currentOffer.Status = offerUpdateInfo.Status;
             }
 
-            if (offerUpdateInfo.FullPrice != null || currentOffer.FullPrice == null)
+            if ((offerUpdateInfo.FullPrice != null) || (currentOffer.FullPrice == null))
             {
                 var fullPrice = 0;
 
@@ -697,25 +765,26 @@ namespace AspNetCoreFuldaFlats.Controllers
                 currentOffer.FullPrice = fullPrice;
             }
 
-            if (!string.IsNullOrWhiteSpace(currentOffer.Street) && currentOffer.HouseNumber != null &&
+            if (!string.IsNullOrWhiteSpace(currentOffer.Street) && (currentOffer.HouseNumber != null) &&
                 !string.IsNullOrWhiteSpace(currentOffer.ZipCode) && !string.IsNullOrWhiteSpace(currentOffer.City) &&
-                currentOffer.UniDistance == null)
+                (currentOffer.UniDistance == null))
             {
                 try
                 {
-                    GeoCoordinate coordinate = await GetOfferGeoCoordinates(currentOffer);
+                    var coordinate = await GetOfferGeoCoordinates(currentOffer);
                     if (coordinate != null)
                     {
                         currentOffer.Latitude = coordinate.Latitude;
                         currentOffer.Longitude = coordinate.Longitude;
-                        currentOffer.UniDistance = Math.Round((coordinate.GetDistanceTo(GlobalConstants.HsFuldaCoordinate) / 1000) * 100) / 100;
+                        currentOffer.UniDistance =
+                            Math.Round(coordinate.GetDistanceTo(GlobalConstants.HsFuldaCoordinate)/1000*100)/100;
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError("Error while requesting offer geo coordinate", ex);
                 }
-            }           
+            }
         }
 
         private async Task CreateOffereRelatedTags(Offer currentOffer, OfferUpdateInfo offerUpdateInfo)
@@ -724,9 +793,9 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             foreach (var tag in offerUpdateInfo.Tags)
             {
-                if (!await _database.Tag.AnyAsync(t => t.OfferId == currentOffer.Id && t.Title == tag))
+                if (!await _database.Tag.AnyAsync(t => (t.OfferId == currentOffer.Id) && (t.Title == tag)))
                 {
-                    await _database.Tag.AddAsync(new Tag { OfferId = currentOffer.Id, Title = tag });
+                    await _database.Tag.AddAsync(new Tag {OfferId = currentOffer.Id, Title = tag});
                     addedTag = true;
                 }
             }
@@ -750,14 +819,15 @@ namespace AspNetCoreFuldaFlats.Controllers
             var requestUrl =
                 $"{GlobalConstants.OpenStreetMapSearchApi.TrimEnd('/')}?street={UrlEncoder.Default.Encode($"{offer.Street} {offer.HouseNumber}")}&postalcode={UrlEncoder.Default.Encode(offer.ZipCode)}&city={UrlEncoder.Default.Encode(offer.City)}&format=json";
 
-            HttpResponseMessage response = await client.GetAsync(requestUrl);
+            var response = await client.GetAsync(requestUrl);
             if (response.IsSuccessStatusCode)
             {
-                string responseBody = await response.Content.ReadAsStringAsync();
-                List<OpenStreetMapSearchResult> openStreetMapSearchResults = JsonConvert.DeserializeObject<List<OpenStreetMapSearchResult>>(responseBody);
-                if (openStreetMapSearchResults != null && openStreetMapSearchResults.Count > 0)
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var openStreetMapSearchResults =
+                    JsonConvert.DeserializeObject<List<OpenStreetMapSearchResult>>(responseBody);
+                if ((openStreetMapSearchResults != null) && (openStreetMapSearchResults.Count > 0))
                 {
-                    OpenStreetMapSearchResult openStreetMapSearchResult = openStreetMapSearchResults.First();
+                    var openStreetMapSearchResult = openStreetMapSearchResults.First();
                     offerCoordinate = new GeoCoordinate(openStreetMapSearchResult.Lat, openStreetMapSearchResult.Lon);
                 }
             }
@@ -766,6 +836,5 @@ namespace AspNetCoreFuldaFlats.Controllers
         }
 
         #endregion
-
     }
 }
