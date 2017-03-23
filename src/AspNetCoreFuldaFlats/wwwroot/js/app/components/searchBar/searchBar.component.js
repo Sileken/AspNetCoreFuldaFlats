@@ -62,7 +62,6 @@ define(['text!./searchBar.component.html', 'css!./searchBar.component.css',
                 return object;
             }
 
-
             var queryParamaterEmpty = {
                 offerType: forceNullObservable(),
                 uniDistance: { gte: forceNullObservable(), lte: forceNullObservable() },
@@ -95,8 +94,10 @@ define(['text!./searchBar.component.html', 'css!./searchBar.component.css',
                     type: "get",
                     contentType: "application/json",
                     success: function (data, status, req) {
-                        var lastSearch = data;
+                        var oldTagsObs = self.queryParameter().tags;
                         self.queryParameter(createRecursiveNotNullObservable(data));
+                        oldTagsObs(self.queryParameter().tags());
+                        self.queryParameter().tags = oldTagsObs;
                     },
                     error: function (req, status, err) {
                         self.queryParameter(queryParamaterEmpty);

@@ -44,7 +44,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 var offer = await
                     _database.Offer
                         .Where(o => o.Status == (int) GlobalConstants.OfferStatus.Active)
-                        .OrderByDescending(o => o.CreationDate)
+                        .OrderByDescending(o => o.LastModified)
                         .Include(o => o.DatabaseLandlord)
                         .Include(o => o.MediaObjects)
                         .Include(o => o.Tags)
@@ -77,6 +77,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 offer.Landlord = int.Parse(HttpContext.User.GetUserId());
                 offer.Status = (int) GlobalConstants.OfferStatus.Inactive;
                 offer.CreationDate = DateTime.Now;
+                offer.LastModified = DateTime.Now;
                 await PersistOffer(offer);
 
                 var reloadedOffer = await _database.Offer
@@ -277,16 +278,24 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             try
             {
-                var offer = await
-                    _database.Offer
-                        .Where(o => o.Status == (int) GlobalConstants.OfferStatus.Active)
-                        .OrderByDescending(o => o.CreationDate)
-                        .Include(o => o.DatabaseLandlord)
-                        .Include(o => o.MediaObjects)
-                        .Include(o => o.Tags)
-                        .Take(10)
-                        .ToListAsync();
-                response = Ok(offer);
+                var lastSearchParameterString = HttpContext.Session.GetString(GlobalConstants.SearchParamtersSessionkey);
+                if (string.IsNullOrWhiteSpace(lastSearchParameterString))
+                {
+                    response = NotFound();
+                }
+                else
+                {
+                    SearchParamaters lastSearchParameters =
+                        JsonConvert.DeserializeObject<SearchParamaters>(lastSearchParameterString);
+                    
+                    var offer = await(await BuildOfferSearchQuery(lastSearchParameters))
+                            .OrderByDescending(o => o.LastModified)
+                            .Include(o => o.DatabaseLandlord)
+                            .Include(o => o.MediaObjects)
+                            .Include(o => o.Tags)
+                            .ToListAsync();
+                    response = Ok(offer);
+                }
             }
             catch (Exception ex)
             {
@@ -552,9 +561,10 @@ namespace AspNetCoreFuldaFlats.Controllers
                 offerUpdateError.Id = new List<string> {"Offer update data are invalid."};
                 offerUpdateError.HasError = true;
             }
+
+            // Client does not send always the id
             //else
             //{
-            // Client does not send always the id
             //if (currentOffer.Id != offerUpdateInfo.Id)
             //{
             //    offerUpdateError.Id = new List<string>
@@ -833,6 +843,150 @@ namespace AspNetCoreFuldaFlats.Controllers
             }
 
             return offerCoordinate;
+        }
+
+        private async Task<IQueryable<Offer>> BuildOfferSearchQuery(SearchParamaters lastSearchParameters)
+        {
+            IQueryable<Offer> offerQuery = _database.Offer
+                .Where(o => o.Status == (int)GlobalConstants.OfferStatus.Active);
+
+            if (!string.IsNullOrWhiteSpace(lastSearchParameters.OfferType))
+            {
+                offerQuery = offerQuery.Where(o => o.OfferType == lastSearchParameters.OfferType);
+            }
+
+            if (lastSearchParameters.Furnished)
+            {
+                offerQuery = offerQuery.Where(o => o.Furnished == true);
+            }
+
+            if (lastSearchParameters.Pets)
+            {
+                offerQuery = offerQuery.Where(o => o.Pets == true);
+            }
+
+            if (lastSearchParameters.Cellar)
+            {
+                offerQuery = offerQuery.Where(o => o.Cellar == true);
+            }
+
+            if (lastSearchParameters.Parking)
+            {
+                offerQuery = offerQuery.Where(o => o.Parking == true);
+            }
+
+            if (lastSearchParameters.Elevator)
+            {
+                offerQuery = offerQuery.Where(o => o.Elevator == true);
+            }
+
+            if (lastSearchParameters.Accessibility)
+            {
+                offerQuery = offerQuery.Where(o => o.Accessability == true);
+            }
+
+            if (lastSearchParameters.Dryer)
+            {
+                offerQuery = offerQuery.Where(o => o.Dryer == true);
+            }
+
+            if (lastSearchParameters.Washingmachine)
+            {
+                offerQuery = offerQuery.Where(o => o.WashingMachine == true);
+            }
+
+            if (lastSearchParameters.Television)
+            {
+                offerQuery = offerQuery.Where(o => o.Television != "No" && o.Television != null && o.Television != "");
+            }
+
+            if (lastSearchParameters.Wlan)
+            {
+                offerQuery = offerQuery.Where(o => o.Wlan == true);
+            }
+
+            if (lastSearchParameters.Lan)
+            {
+                offerQuery = offerQuery.Where(o => o.Lan == true);
+            }
+
+            if (lastSearchParameters.Telephone)
+            {
+                offerQuery = offerQuery.Where(o => o.Telephone == true);
+            }
+
+            if (lastSearchParameters.UniDistance != null)
+            {
+                if (lastSearchParameters.UniDistance.Gte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.UniDistance > lastSearchParameters.UniDistance.Gte);
+                }
+
+                if (lastSearchParameters.UniDistance.Lte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.UniDistance < lastSearchParameters.UniDistance.Lte);
+                }
+            }
+
+            if (lastSearchParameters.Rent != null)
+            {
+                if (lastSearchParameters.Rent.Gte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.Rent > lastSearchParameters.Rent.Gte);
+                }
+
+                if (lastSearchParameters.Rent.Lte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.Rent < lastSearchParameters.Rent.Lte);
+                }
+            }
+
+            if (lastSearchParameters.Size != null)
+            {
+                if (lastSearchParameters.Size.Gte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.Size > lastSearchParameters.Size.Gte);
+                }
+
+                if (lastSearchParameters.Size.Lte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.Size < lastSearchParameters.Size.Lte);
+                }
+            }
+
+            if (lastSearchParameters.Rooms != null)
+            {
+                if (lastSearchParameters.Rooms.Gte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.Rooms > lastSearchParameters.Rooms.Gte);
+                }
+
+                if (lastSearchParameters.Rooms.Lte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.Rooms < lastSearchParameters.Rooms.Lte);
+                }
+            }
+
+            if (lastSearchParameters.Internetspeed != null)
+            {
+                if (lastSearchParameters.Internetspeed.Gte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.InternetSpeed > lastSearchParameters.Internetspeed.Gte);
+                }
+
+                if (lastSearchParameters.Internetspeed.Lte != null)
+                {
+                    offerQuery = offerQuery.Where(o => o.InternetSpeed < lastSearchParameters.Internetspeed.Lte);
+                }
+            }
+
+            if (lastSearchParameters.Tags != null && lastSearchParameters.Tags.Count > 0)
+            {
+                List<int> offerIds = await _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && t.OfferId != null).Select(t => (int)t.OfferId).ToListAsync();
+                offerQuery = offerQuery.Where(o => offerIds.Contains(o.Id));
+            }
+
+            return offerQuery;
         }
 
         #endregion
