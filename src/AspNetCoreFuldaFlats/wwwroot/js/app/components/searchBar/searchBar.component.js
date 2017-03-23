@@ -48,44 +48,46 @@ define(['text!./searchBar.component.html', 'css!./searchBar.component.css',
 
             self.offerTypes = ko.observableArray(['FLAT', 'SHARE', 'SUBLET', 'COUCH', 'PARTY']);
 
-            //Recursively crawl the last search query and set knockout observables in leaf nodes
-            function createRecursiveNotNullObservable(object) {
-                for (var c1 in object) {
-                    if (typeof object[c1] != "object") {
-                        object[c1] = forceNullObservable(object[c1]);
-                        continue;
-                    } else if (Array.isArray(object[c1])) {
-                        object[c1] = forceNullObservable(object[c1]);
-                    }
-                    object[c1] = createRecursiveNotNullObservable(object[c1]);
+            function getEmptyQueryParamaterEmpty () {
+                return {
+                    offerType: forceNullObservable(),
+                    uniDistance: { gte: forceNullObservable(), lte: forceNullObservable() },
+                    rent: { gte: forceNullObservable(), lte: forceNullObservable() },
+                    size: { gte: forceNullObservable(), lte: forceNullObservable() },
+                    tags: forceNullObservable(),
+                    //Extended Search Parameters
+                    rooms: { gte: forceNullObservable(), lte: forceNullObservable() },
+                    furnished: forceNullObservable(),
+                    pets: forceNullObservable(),
+                    cellar: forceNullObservable(),
+                    parking: forceNullObservable(),
+                    elevator: forceNullObservable(),
+                    accessibility: forceNullObservable(),
+                    dryer: forceNullObservable(),
+                    washingmachine: forceNullObservable(),
+                    television: forceNullObservable(),
+                    wlan: forceNullObservable(),
+                    lan: forceNullObservable(),
+                    telephone: forceNullObservable(),
+                    internetspeed: { gte: forceNullObservable() }
                 }
-                return object;
-            }
-
-            var queryParamaterEmpty = {
-                offerType: forceNullObservable(),
-                uniDistance: { gte: forceNullObservable(), lte: forceNullObservable() },
-                rent: { gte: forceNullObservable(), lte: forceNullObservable() },
-                size: { gte: forceNullObservable(), lte: forceNullObservable() },
-                tags: forceNullObservable(),
-                //Extended Search Parameters
-                rooms: { gte: forceNullObservable(), lte: forceNullObservable() },
-                furnished: forceNullObservable(),
-                pets: forceNullObservable(),
-                cellar: forceNullObservable(),
-                parking: forceNullObservable(),
-                elevator: forceNullObservable(),
-                accessibility: forceNullObservable(),
-                dryer: forceNullObservable(),
-                washingmachine: forceNullObservable(),
-                television: forceNullObservable(),
-                wlan: forceNullObservable(),
-                lan: forceNullObservable(),
-                telephone: forceNullObservable(),
-                internetspeed: { gte: forceNullObservable() }
             };
 
-            self.queryParameter = ko.observable(queryParamaterEmpty);
+            //Recursively crawl the last search query and set knockout observables in leaf nodes
+            function createRecursiveNotNullObservable(queryParameter, lastSearchResult ) {
+                for (var c1 in lastSearchResult) {
+                    if (typeof lastSearchResult[c1] != "object") {
+                        queryParameter[c1] = forceNullObservable(lastSearchResult[c1]);
+                        continue;
+                    } else if (Array.isArray(lastSearchResult[c1])) {
+                        queryParameter[c1] = forceNullObservable(lastSearchResult[c1]);
+                    }
+                    queryParameter[c1] = createRecursiveNotNullObservable(queryParameter[c1], lastSearchResult[c1]);
+                }
+                return queryParameter;
+            }
+
+            self.queryParameter = ko.observable(getEmptyQueryParamaterEmpty());
 
             function getQueryParameter() {
                 $.ajax({
@@ -95,12 +97,12 @@ define(['text!./searchBar.component.html', 'css!./searchBar.component.css',
                     contentType: "application/json",
                     success: function (data, status, req) {
                         var oldTagsObs = self.queryParameter().tags;
-                        self.queryParameter(createRecursiveNotNullObservable(data));
+                        self.queryParameter(createRecursiveNotNullObservable(getEmptyQueryParamaterEmpty(), data));
                         oldTagsObs(self.queryParameter().tags());
                         self.queryParameter().tags = oldTagsObs;
                     },
                     error: function (req, status, err) {
-                        self.queryParameter(queryParamaterEmpty);
+                        self.queryParameter(getEmptyQueryParamaterEmpty());
                     }
                 });
             };
