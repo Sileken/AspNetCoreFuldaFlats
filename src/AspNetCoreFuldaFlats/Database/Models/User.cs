@@ -10,8 +10,10 @@ namespace AspNetCoreFuldaFlats.Database.Models
     public class User
     {
         private string _profileImage = string.Empty;
+
         [Key]
         public int Id { get; set; }
+
         public double? AverageRating { get; set; }
         public DateTime? Birthday { get; set; }
         public string City { get; set; }
@@ -22,24 +24,30 @@ namespace AspNetCoreFuldaFlats.Database.Models
         public string HouseNumber { get; set; }
         public string LastName { get; set; }
         public string OfficeAddress { get; set; }
+
         [JsonIgnore]
         public string Password { get; set; }
 
         [NotMapped]
         [JsonProperty("password")]
         public string ReadPassword { get; set; }
+
         public string PhoneNumber { get; set; }
+
         public string ProfilePicture
         {
             get { return string.IsNullOrWhiteSpace(_profileImage) ? "/uploads/cupcake.png" : _profileImage; }
             set { _profileImage = value; }
         }
+
         public string Street { get; set; }
         public int? Type { get; set; }
         public DateTime? UpgradeDate { get; set; }
         public string ZipCode { get; set; }
+
         [JsonIgnore]
         public bool? IsLocked { get; set; }
+
         [JsonIgnore]
         public int? LoginAttempts { get; set; }
 
@@ -53,7 +61,7 @@ namespace AspNetCoreFuldaFlats.Database.Models
             (DatabaseFavorites != null) && (DatabaseFavorites.Count > 0)
                 ? DatabaseFavorites.Where(d => d.Offer != null).Select(d => d.Offer).ToArray()
                 : new Offer[0];
-    
+
         [InverseProperty("DatabaseLandlord")]
         public virtual ICollection<Offer> Offers { get; set; }
     }

@@ -993,37 +993,40 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             if ((lastSearchParameters.Tags != null) && (lastSearchParameters.Tags.Count > 0))
             {
-                var tags =
-                    await
-                        _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && (t.OfferId != null))
-                            .ToListAsync();
+                //var tags =
+                //    await
+                //        _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && (t.OfferId != null))
+                //            .ToListAsync();
 
-                var offerTagMapping = new Dictionary<int, List<string>>();
-                foreach (var tag in tags)
-                {
-                    if (tag.OfferId != null)
-                    {
-                        if (offerTagMapping.ContainsKey((int) tag.OfferId))
-                        {
-                            offerTagMapping[(int) tag.OfferId].Add(tag.Title);
-                        }
-                        else
-                        {
-                            offerTagMapping.Add((int) tag.OfferId, new List<string> {tag.Title});
-                        }
-                    }
-                }
+                //var offerTagMapping = new Dictionary<int, List<string>>();
+                //foreach (var tag in tags)
+                //{
+                //    if (tag.OfferId != null)
+                //    {
+                //        if (offerTagMapping.ContainsKey((int) tag.OfferId))
+                //        {
+                //            offerTagMapping[(int) tag.OfferId].Add(tag.Title);
+                //        }
+                //        else
+                //        {
+                //            offerTagMapping.Add((int) tag.OfferId, new List<string> {tag.Title});
+                //        }
+                //    }
+                //}
 
-                IEnumerable<int> offerIds =
-                    offerTagMapping.Where(
-                            m =>
-                            {
-                                return (lastSearchParameters.Tags.Count() <= m.Value.Count()) &&
-                                       lastSearchParameters.Tags.All(t => m.Value.Contains(t));
-                            })
-                        .Select(m => m.Key)
-                        .ToList();
+                //IEnumerable<int> offerIds =
+                //    offerTagMapping.Where(
+                //            m =>
+                //            {
+                //                return (lastSearchParameters.Tags.Count() <= m.Value.Count()) &&
+                //                       lastSearchParameters.Tags.All(t => m.Value.Contains(t));
+                //            })
+                //        .Select(m => m.Key)
+                //        .ToList();
 
+                //offerQuery = offerIds.Any() ? offerQuery.Where(o => offerIds.Contains(o.Id)) : null;
+
+                List<int> offerIds = await _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && t.OfferId != null).Select(t => (int)t.OfferId).ToListAsync();
                 offerQuery = offerIds.Any() ? offerQuery.Where(o => offerIds.Contains(o.Id)) : null;
             }
 

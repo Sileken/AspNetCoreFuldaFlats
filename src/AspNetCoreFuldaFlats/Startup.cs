@@ -1,16 +1,17 @@
 ﻿using System.IO;
-using System.Linq;
+using AspNetCoreFuldaFlats.AuthorizedJsonSerialization;
 using AspNetCoreFuldaFlats.Constants;
 using AspNetCoreFuldaFlats.Database;
-using AspNetCoreFuldaFlats.Database.Models;
 using AspNetCoreFuldaFlats.Middlwares.HtmlFileExtensionMiddleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace AspNetCoreFuldaFlats
@@ -23,25 +24,31 @@ namespace AspNetCoreFuldaFlats
         {
             HostingEnvironment = env;
         }
-        
+
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<WebApiDataContext>(options =>
-            {
-                options.UseMySql(HostingEnvironment.EnvironmentName == "azure" ? "server=127.0.0.1;userid=azure;password=6#vWHD_$;database=fuldaflats;Port=49761;convertzerodatetime=True" : "server=localhost;user id=root;database=fuldaflats;convertzerodatetime=True");
-            });
-            
-            services.AddMvc().AddJsonOptions(options =>
-            {
-                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-            });
+            services.AddDbContext<WebApiDataContext>(
+                options =>
+                {
+                    options.UseMySql(HostingEnvironment.EnvironmentName == "azure"
+                        ? "server=127.0.0.1;userid=azure;password=6#vWHD_$;database=fuldaflats;Port=49761;convertzerodatetime=True"
+                        : "server=localhost;user id=root;database=fuldaflats;convertzerodatetime=True");
+                });
+
+            services.AddMvc().AddJsonOptions(options => { });
 
             services.AddDistributedMemoryCache();
             services.AddSession();
-        } 
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
+            IOptions<MvcJsonOptions> mvcOptions, IHttpContextAccessor httpContextAccessor)
         {
+            mvcOptions.Value.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            mvcOptions.Value.SerializerSettings.ContractResolver =
+                new JsonAuthorizedContractResolver(httpContextAccessor);
+
             loggerFactory.AddConsole();
 
             if (env.IsDevelopment())
@@ -49,7 +56,7 @@ namespace AspNetCoreFuldaFlats
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseCookieAuthentication(new CookieAuthenticationOptions()
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
                 AuthenticationScheme = GlobalConstants.CookieAuthenticationSchema,
                 AutomaticAuthenticate = true,
@@ -60,10 +67,10 @@ namespace AspNetCoreFuldaFlats
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
-            app.UseStaticFiles(new StaticFileOptions()
+            app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(
-            Path.Combine(Directory.GetCurrentDirectory(), @"Uploads")),
+                    Path.Combine(Directory.GetCurrentDirectory(), @"Uploads")),
                 RequestPath = new PathString("/uploads")
             });
 
