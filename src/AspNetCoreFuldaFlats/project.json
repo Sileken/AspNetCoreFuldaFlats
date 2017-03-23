@@ -56,6 +56,6 @@
     },
 
     "scripts": {
-        "postpublish": ["npm install -g bower", "bower install  %publish:OutputPath%/wwwroot/bower.json", "dotnet publish-iis --publish-folder %publish:OutputPath% --framework %publish:FullTargetFramework%" ]
+        "postpublish": [ "npm install -g bower", "bower install  %publish:OutputPath%/wwwroot/bower.json --force-latest", "dotnet publish-iis --publish-folder %publish:OutputPath% --framework %publish:FullTargetFramework%" ]
     }
 }
