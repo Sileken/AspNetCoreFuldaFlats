@@ -285,16 +285,26 @@ namespace AspNetCoreFuldaFlats.Controllers
                 }
                 else
                 {
-                    SearchParamaters lastSearchParameters =
+                    var lastSearchParameters =
                         JsonConvert.DeserializeObject<SearchParamaters>(lastSearchParameterString);
-                    
-                    var offer = await(await BuildOfferSearchQuery(lastSearchParameters))
+
+                    var offersQuery = await BuildOfferSearchQuery(lastSearchParameters);
+                    List<Offer> offerResult;
+                    if (offersQuery != null)
+                    {
+                        offerResult = await offersQuery
                             .OrderByDescending(o => o.LastModified)
                             .Include(o => o.DatabaseLandlord)
                             .Include(o => o.MediaObjects)
                             .Include(o => o.Tags)
                             .ToListAsync();
-                    response = Ok(offer);
+                    }
+                    else
+                    {
+                        offerResult = new List<Offer>();
+                    }
+
+                    response = Ok(offerResult);
                 }
             }
             catch (Exception ex)
@@ -320,7 +330,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 }
                 else
                 {
-                    SearchParamaters lastSearchParamaters =
+                    var lastSearchParamaters =
                         JsonConvert.DeserializeObject<SearchParamaters>(lastSearchParameterString);
                     response = Ok(lastSearchParamaters);
                 }
@@ -847,8 +857,8 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         private async Task<IQueryable<Offer>> BuildOfferSearchQuery(SearchParamaters lastSearchParameters)
         {
-            IQueryable<Offer> offerQuery = _database.Offer
-                .Where(o => o.Status == (int)GlobalConstants.OfferStatus.Active);
+            var offerQuery = _database.Offer
+                .Where(o => o.Status == (int) GlobalConstants.OfferStatus.Active);
 
             if (!string.IsNullOrWhiteSpace(lastSearchParameters.OfferType))
             {
@@ -897,7 +907,8 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             if (lastSearchParameters.Television)
             {
-                offerQuery = offerQuery.Where(o => o.Television != "No" && o.Television != null && o.Television != "");
+                offerQuery =
+                    offerQuery.Where(o => (o.Television != "No") && (o.Television != null) && (o.Television != ""));
             }
 
             if (lastSearchParameters.Wlan)
@@ -980,10 +991,40 @@ namespace AspNetCoreFuldaFlats.Controllers
                 }
             }
 
-            if (lastSearchParameters.Tags != null && lastSearchParameters.Tags.Count > 0)
+            if ((lastSearchParameters.Tags != null) && (lastSearchParameters.Tags.Count > 0))
             {
-                List<int> offerIds = await _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && t.OfferId != null).Select(t => (int)t.OfferId).ToListAsync();
-                offerQuery = offerQuery.Where(o => offerIds.Contains(o.Id));
+                var tags =
+                    await
+                        _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && (t.OfferId != null))
+                            .ToListAsync();
+
+                var offerTagMapping = new Dictionary<int, List<string>>();
+                foreach (var tag in tags)
+                {
+                    if (tag.OfferId != null)
+                    {
+                        if (offerTagMapping.ContainsKey((int) tag.OfferId))
+                        {
+                            offerTagMapping[(int) tag.OfferId].Add(tag.Title);
+                        }
+                        else
+                        {
+                            offerTagMapping.Add((int) tag.OfferId, new List<string> {tag.Title});
+                        }
+                    }
+                }
+
+                IEnumerable<int> offerIds =
+                    offerTagMapping.Where(
+                            m =>
+                            {
+                                return (lastSearchParameters.Tags.Count() <= m.Value.Count()) &&
+                                       lastSearchParameters.Tags.All(t => m.Value.Contains(t));
+                            })
+                        .Select(m => m.Key)
+                        .ToList();
+
+                offerQuery = offerIds.Any() ? offerQuery.Where(o => offerIds.Contains(o.Id)) : null;
             }
 
             return offerQuery;
