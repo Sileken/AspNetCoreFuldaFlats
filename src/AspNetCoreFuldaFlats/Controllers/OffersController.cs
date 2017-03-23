@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace AspNetCoreFuldaFlats.Controllers
@@ -23,11 +24,13 @@ namespace AspNetCoreFuldaFlats.Controllers
     [Route("api/[controller]")]
     public class OffersController : Controller
     {
+        private readonly AppSettings _appSettings;
         private readonly WebApiDataContext _database;
         private readonly ILogger _logger;
 
-        public OffersController(WebApiDataContext webApiDataContext, ILogger<UsersController> logger)
+        public OffersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext, ILogger<UsersController> logger)
         {
+            _appSettings = appSettingsOptions.Value;
             _database = webApiDataContext;
             _logger = logger;
         }
@@ -126,8 +129,8 @@ namespace AspNetCoreFuldaFlats.Controllers
                             {
                                 new Mediaobject
                                 {
-                                    MainUrl = GlobalConstants.DefaultThumbnailUrl,
-                                    ThumbnailUrl = GlobalConstants.DefaultThumbnailUrl
+                                    MainUrl = _appSettings.DefaultThumbnailUrl,
+                                    ThumbnailUrl = _appSettings.DefaultThumbnailUrl
                                 }
                             };
                         }
@@ -797,7 +800,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                         currentOffer.Latitude = coordinate.Latitude;
                         currentOffer.Longitude = coordinate.Longitude;
                         currentOffer.UniDistance =
-                            Math.Round(coordinate.GetDistanceTo(GlobalConstants.HsFuldaCoordinate)/1000*100)/100;
+                            Math.Round(coordinate.GetDistanceTo(_appSettings.HsFuldaCoordinate)/1000*100)/100;
                     }
                 }
                 catch (Exception ex)
@@ -837,7 +840,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 .Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             var requestUrl =
-                $"{GlobalConstants.OpenStreetMapSearchApi.TrimEnd('/')}?street={UrlEncoder.Default.Encode($"{offer.Street} {offer.HouseNumber}")}&postalcode={UrlEncoder.Default.Encode(offer.ZipCode)}&city={UrlEncoder.Default.Encode(offer.City)}&format=json";
+                $"{_appSettings.OpenStreetMapSearchApi.TrimEnd('/')}?street={UrlEncoder.Default.Encode($"{offer.Street} {offer.HouseNumber}")}&postalcode={UrlEncoder.Default.Encode(offer.ZipCode)}&city={UrlEncoder.Default.Encode(offer.City)}&format=json";
 
             var response = await client.GetAsync(requestUrl);
             if (response.IsSuccessStatusCode)

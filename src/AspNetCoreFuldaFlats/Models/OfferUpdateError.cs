@@ -7,7 +7,7 @@ namespace AspNetCoreFuldaFlats.Models
     {
         [JsonIgnore]
         public bool HasError { get; set; } = false;
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<string> Id { get; set; }
 

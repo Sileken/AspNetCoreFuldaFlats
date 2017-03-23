@@ -3,11 +3,13 @@ using AspNetCoreFuldaFlats.AuthorizedJsonSerialization;
 using AspNetCoreFuldaFlats.Constants;
 using AspNetCoreFuldaFlats.Database;
 using AspNetCoreFuldaFlats.Middlwares.HtmlFileExtensionMiddleware;
+using AspNetCoreFuldaFlats.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
@@ -18,21 +20,32 @@ namespace AspNetCoreFuldaFlats
 {
     public class Startup
     {
+        private IConfigurationRoot Configuration { get; }
         private IHostingEnvironment HostingEnvironment { get; }
 
         public Startup(IHostingEnvironment env)
         {
+            var builder = new ConfigurationBuilder()
+            .SetBasePath(env.ContentRootPath + "/Configs")
+            .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables();
+            Configuration = builder.Build();
+
             HostingEnvironment = env;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
+
+            GlobalConstants.DefaultThumbnailUrl = Configuration.GetValue<string>("AppSettings:DefaultThumbnailUrl");
+
             services.AddDbContext<WebApiDataContext>(
                 options =>
                 {
                     options.UseMySql(HostingEnvironment.EnvironmentName == "azure"
-                        ? "server=127.0.0.1;userid=azure;password=6#vWHD_$;database=fuldaflats;Port=49761;convertzerodatetime=True"
-                        : "server=localhost;user id=root;database=fuldaflats;convertzerodatetime=True");
+                        ? Configuration.GetValue<string>("AppSettings:AzureMySqlConnectionString")
+                        : Configuration.GetValue<string>("AppSettings:DefaultMySqlConnectionString"));
                 });
 
             services.AddMvc().AddJsonOptions(options => { });
@@ -75,7 +88,6 @@ namespace AspNetCoreFuldaFlats
             });
 
             app.UseSession();
-
             app.UseMvc();
         }
     }

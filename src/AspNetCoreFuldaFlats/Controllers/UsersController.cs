@@ -13,17 +13,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
     [Route("api/[controller]")]
     public class UsersController : Controller
     {
+        private readonly AppSettings _appSettings;
         private readonly WebApiDataContext _database;
         private readonly ILogger _logger;
 
-        public UsersController(WebApiDataContext webApiDataContext, ILogger<UsersController> logger)
+        public UsersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext, ILogger<UsersController> logger)
         {
+            _appSettings = appSettingsOptions.Value;
             _database = webApiDataContext;
             _logger = logger;
         }
@@ -68,7 +71,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         }
 
         [HttpPost("auth")]
-        public async Task<IActionResult> SigIn([FromBody] SignInData signInData)
+        public async Task<IActionResult> SigIn([FromBody] SignInInfo signInData)
         {
             IActionResult response = StatusCode(403);
 
@@ -102,7 +105,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                         else if (user.IsLocked != true)
                         {
                             user.LoginAttempts = user.LoginAttempts ?? 0;
-                            if (user.LoginAttempts + 1 < UserConstants.MaxSignInAttempts)
+                            if (user.LoginAttempts + 1 < _appSettings.MaxSignInAttempts)
                             {
                                 user.LoginAttempts++;
                             }
@@ -293,7 +296,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             IActionResult response = BadRequest();
 
             if (string.IsNullOrWhiteSpace(changePasswordInfo.PasswordNew) ||
-                (changePasswordInfo.PasswordNew.Length < UserConstants.MinPasswordLength))
+                (changePasswordInfo.PasswordNew.Length < _appSettings.MinPasswordLength))
             {
                 response = BadRequest(new ChangePasswordError
                 {
@@ -550,7 +553,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             }
 
             if (string.IsNullOrWhiteSpace(userInfo.ReadPassword) ||
-                (userInfo.ReadPassword.Length < UserConstants.MinPasswordLength))
+                (userInfo.ReadPassword.Length < _appSettings.MinPasswordLength))
             {
                 updateError.Password = new List<string> {"Password is too short."};
                 updateError.HasError = true;
@@ -685,7 +688,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             return Convert.ToBase64String(
                 SHA512.Create()
                     .ComputeHash(
-                        Encoding.UTF8.GetBytes(UserConstants.PasswordSalt + plainPassword)));
+                        Encoding.UTF8.GetBytes(_appSettings.PasswordSalt + plainPassword)));
         }
 
         private async Task SignInUser(User user)

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace AspNetCoreFuldaFlats.Models
@@ -10,6 +7,7 @@ namespace AspNetCoreFuldaFlats.Models
     {
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<string> Offer { get; set; }
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<string> Auth { get; set; }
     }

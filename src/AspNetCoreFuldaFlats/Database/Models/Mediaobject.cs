@@ -2,7 +2,7 @@
 
 namespace AspNetCoreFuldaFlats.Database.Models
 {
-    public partial class Mediaobject
+    public class Mediaobject
     {
         public int Id { get; set; }
         public int? CreatedByUserId { get; set; }

@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreFuldaFlats.Database
 {
-    public partial class WebApiDataContext : DbContext
-    { 
+    public class WebApiDataContext : DbContext
+    {
         public virtual DbSet<Favorite> Favorite { get; set; }
         public virtual DbSet<Mediaobject> Mediaobject { get; set; }
         public virtual DbSet<Offer> Offer { get; set; }
@@ -15,6 +15,7 @@ namespace AspNetCoreFuldaFlats.Database
 
         public WebApiDataContext(DbContextOptions<WebApiDataContext> options)
             : base(options)
-        {}
+        {
+        }
     }
 }

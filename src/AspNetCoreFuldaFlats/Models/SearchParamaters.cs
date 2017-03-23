@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace AspNetCoreFuldaFlats.Models
 {
     public class SearchParamaters
     {
-        public string OfferType { get; set;  }
+        public string OfferType { get; set; }
         public SearchRangeParameter UniDistance { get; set; }
         public SearchRangeParameter Rent { get; set; }
         public SearchRangeParameter Size { get; set; }
         public ICollection<string> Tags { get; set; }
+
         //Extended Search Parameter
         public SearchRangeParameter Rooms { get; set; }
         public bool Furnished { get; set; }
