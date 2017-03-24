@@ -61,7 +61,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             try
             {
-                var mediaobject = await _database.Mediaobject.Include(m => m.Offer).SingleOrDefaultAsync(m => m.Id == mediaObjectId);
+                var mediaobject = await _database.Mediaobject.SingleOrDefaultAsync(m => m.Id == mediaObjectId);
                 if (mediaobject?.Offer == null)
                 {
                     response = NotFound(
@@ -72,7 +72,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 }
                 else
                 {
-                    if (mediaobject.Offer.Landlord != int.Parse(HttpContext.User.GetUserId()))
+                    if (mediaobject.CreatedByUserId != int.Parse(HttpContext.User.GetUserId()))
                     {
                         response = StatusCode(401,
                             new DeleteOfferError

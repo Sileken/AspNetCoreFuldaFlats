@@ -23,5 +23,7 @@ namespace AspNetCoreFuldaFlats.Models
         public string PasswordSalt { get; set; }
         public int MaxSignInAttempts { get; set; }
         public int MinPasswordLength { get; set; }
+        public int MaxUploadFileSizeInBytes { get; set; }
+        public List<string> SupportedImageContentTypes { get; set; }
     }
 }
