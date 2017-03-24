@@ -170,6 +170,13 @@ namespace AspNetCoreFuldaFlats.Controllers
                                 }
                             };
                         }
+
+                        if (HttpContext.User.Identity.IsAuthenticated)
+                        {
+                            offer.Favorite = await _database.Favorite.Where(
+                                f => (f.UserId == HttpContext.User.GetUserId()) && (f.OfferId == offer.Id)).ToListAsync();
+                        }
+
                         response = Ok(offer);
                     }
                 }

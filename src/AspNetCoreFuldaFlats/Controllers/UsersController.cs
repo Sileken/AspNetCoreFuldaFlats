@@ -533,7 +533,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             if (string.IsNullOrWhiteSpace(userInfo.PhoneNumber))
             {
-                updateError.PhoneNumber = new List<string> {"Please enter a phone number.}"};
+                updateError.PhoneNumber = new List<string> {"Please enter a phone number."};
                 updateError.HasError = true;
             }
 

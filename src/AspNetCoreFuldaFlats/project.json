@@ -57,7 +57,8 @@
         "include": [
             "wwwroot",
             "web.config",
-            "Uploads"
+            "Uploads",
+            "Configs"
         ]
     },
 

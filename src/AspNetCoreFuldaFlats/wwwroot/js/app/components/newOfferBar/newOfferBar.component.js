@@ -385,7 +385,9 @@ define(['text!./newOfferBar.component.html', 'css!./newOfferBar.component.css', 
                                     self.offerLandlordIsNotCurrentUser(true);
                                 }
                                 else {
+                                    var oldTags = self.offer().tags;
                                     var mappedResult = api.offers.mapOfferResultToModel(requestedOffer);
+                                    mappedResult.tags = oldTags;
                                     self.offer(mappedResult);
                                     resetErrors();
                                 }

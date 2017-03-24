@@ -139,5 +139,9 @@ namespace AspNetCoreFuldaFlats.Database.Models
 
         [InverseProperty("Offer")]
         public virtual ICollection<Tag> Tags { get; set; }
+
+        [NotMapped]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public  List<Favorite> Favorite { get; set; }
     }
 }

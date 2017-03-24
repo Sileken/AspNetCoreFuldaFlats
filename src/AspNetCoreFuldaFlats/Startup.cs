@@ -50,7 +50,7 @@ namespace AspNetCoreFuldaFlats
                         : Configuration.GetValue<string>("AppSettings:DefaultMySqlConnectionString"));
                 });
 
-            services.AddMvc().AddJsonOptions(options => { });
+            services.AddMvc();
 
             services.AddDistributedMemoryCache();
             services.AddSession();
@@ -105,11 +105,11 @@ namespace AspNetCoreFuldaFlats
             app.UseSession();
             app.UseMvc();
 
-            app.UseSwagger(options => options.RouteTemplate = "api/docs/{documentName}/swagger.json");
+            app.UseSwagger(options => options.RouteTemplate = "api/{documentName}/swagger.json");
             app.UseSwaggerUI(options =>
             {
-                options.RoutePrefix = "api/docs";
-                options.SwaggerEndpoint("/api/docs/v1/swagger.json", "FuldaFlats API V1");
+                options.RoutePrefix = "api";
+                options.SwaggerEndpoint("/api/v1/swagger.json", "FuldaFlats API V1");
             });
         }
     }

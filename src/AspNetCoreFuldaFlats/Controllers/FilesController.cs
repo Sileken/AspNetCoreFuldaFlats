@@ -73,7 +73,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                         BadRequest(new UploadError
                         {
                             Error =
-                                $"Unsupported picture format. Supported formats are {string.Join(",", _appSettings.SupportedImageContentTypes)}."
+                                $"Unsupported picture format. Supported formats are {string.Join(", ", _appSettings.SupportedImageContentTypes).Replace("image/", string.Empty)}."
                         });
                 }
                 else
@@ -168,7 +168,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                         BadRequest(new UploadError
                         {
                             Error =
-                                $"Unsupported picture format. Supported formats are {string.Join(",", _appSettings.SupportedImageContentTypes)}."
+                                $"Unsupported picture format. Supported formats are {string.Join(", ", _appSettings.SupportedImageContentTypes).Replace("image/", string.Empty)}."
                         });
                 }
                 else

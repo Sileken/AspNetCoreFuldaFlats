@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AspNetCoreFuldaFlats.Database.Models;
 
 namespace AspNetCoreFuldaFlats.Models
 {
