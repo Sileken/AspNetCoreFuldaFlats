@@ -19,9 +19,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
+    /// <summary>
+    ///     Endpoints offer functions.
+    /// </summary>
     [Route("api/[controller]")]
     public class OffersController : Controller
     {
@@ -29,7 +33,8 @@ namespace AspNetCoreFuldaFlats.Controllers
         private readonly WebApiDataContext _database;
         private readonly ILogger _logger;
 
-        public OffersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext, ILogger<OffersController> logger)
+        public OffersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext,
+            ILogger<OffersController> logger)
         {
             _appSettings = appSettingsOptions.Value;
             _database = webApiDataContext;
@@ -38,6 +43,14 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         #region Recent Offers 
 
+        /// <summary>
+        ///     Get list of recent offers.
+        /// </summary>
+        /// <returns></returns>
+        [Produces(typeof(List<Offer>))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Offer>))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest)]
         [HttpGet("recent")]
         public async Task<IActionResult> GetRecentOffers()
         {
@@ -59,7 +72,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -69,6 +82,15 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         #region CRUD Offer
 
+        /// <summary>
+        ///     Create a new offer with given JSON data in the body.Requires the account to be upgraded to landlord.
+        /// </summary>
+        /// <returns></returns>
+        [Produces(typeof(Offer))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Offer))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateOffer()
@@ -97,12 +119,23 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Get detailed information on the offer with given :id. (More information when session is authenticated).
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <returns></returns>
+        [Produces(typeof(Offer))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Offer))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOffer(int offerId)
         {
@@ -148,12 +181,24 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Manipulate the data of the offer with given :id with given JSON data in the body under the prerequisite that the
+        ///     offer is owned by the currently sign in user.
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <param name="offerUpdateInfo"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.OK)]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, Type = typeof(OfferUpdateError))]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPut("{offerId}")]
         public async Task<IActionResult> UpdateOffer(int offerId, [FromBody] OfferUpdateInfo offerUpdateInfo)
@@ -195,12 +240,22 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Delete the offer with given id und the prerequisite that the offer is owned by the currently sign in user.
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.NoContent)]
+        [SwaggerResponse((int) HttpStatusCode.NotFound, Type = typeof(DeleteOfferError))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized, Type = typeof(OfferUpdateError))]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpDelete("{offerId}")]
         public async Task<IActionResult> DeleteOffer(int offerId)
@@ -239,7 +294,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -249,6 +304,14 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         #region Search
 
+        /// <summary>
+        ///     Send a offer search query.
+        /// </summary>
+        /// <param name="searchParamaters"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.NoContent)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, typeof(string))]
         [HttpPost("search")]
         public IActionResult SearchOffers([FromBody] SearchParamaters searchParamaters)
         {
@@ -270,12 +333,21 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Get search result from last sended offer search query.
+        /// </summary>
+        /// <returns></returns>
+        [Produces(typeof(List<Offer>))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Offer>))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [HttpGet("search")]
         public async Task<IActionResult> GetLastSearchResult()
         {
@@ -315,12 +387,20 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Get last sended offer search query.
+        /// </summary>
+        /// <returns></returns>
+        [Produces(typeof(string))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(string))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
         [HttpGet("search/last")]
         public IActionResult GetLastSearchParameter()
         {
@@ -343,7 +423,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -353,6 +433,16 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         #region Offer Reviews
 
+        /// <summary>
+        ///     Get offer reviews.
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <returns></returns>
+        [Produces(typeof(List<Review>))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Review>))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpGet("{offerId}/review")]
         public async Task<IActionResult> GetOfferReviews(int offerId)
@@ -383,12 +473,23 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Post a review for the offer with the given id when a user is sign in.
+        /// </summary>
+        /// <param name="review"></param>
+        /// <param name="offerId"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.Created)]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError, typeof(ReviewError))]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPost("{offerId}/review")]
         public async Task<IActionResult> CreateOfferReview([FromBody] Review review, [FromRoute] int offerId)
@@ -470,13 +571,13 @@ namespace AspNetCoreFuldaFlats.Controllers
                         _database.User.Update(offerLandlord);
 
                         await _database.SaveChangesAsync();
-                        response = StatusCode((int)HttpStatusCode.Created);
+                        response = StatusCode((int) HttpStatusCode.Created);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode((int)HttpStatusCode.InternalServerError);
+                    response = StatusCode((int) HttpStatusCode.InternalServerError);
                 }
             }
             else
@@ -491,6 +592,14 @@ namespace AspNetCoreFuldaFlats.Controllers
 
         #region Offer Favorites 
 
+        /// <summary>
+        ///     Set offer as my favorite.
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.Created)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPut("{offerId}/favorite")]
         public async Task<IActionResult> SetOfferAsFavorite(int offerId)
@@ -510,19 +619,27 @@ namespace AspNetCoreFuldaFlats.Controllers
                         UserId = HttpContext.User.GetUserId()
                     });
                     await _database.SaveChangesAsync();
-                    response = StatusCode((int)HttpStatusCode.Created);
+                    response = StatusCode((int) HttpStatusCode.Created);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
-
+        /// <summary>
+        ///     Delete a offer favorite.
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <returns></returns>
+        [Produces(typeof(List<Review>))]
+        [SwaggerResponse((int) HttpStatusCode.OK)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpDelete("{offerId}/favorite")]
         public async Task<IActionResult> DeleteOfferFromFavorite(int offerId)
@@ -539,13 +656,14 @@ namespace AspNetCoreFuldaFlats.Controllers
                 {
                     _database.Favorite.Remove(favorite);
                     await _database.SaveChangesAsync();
-                    response = Ok();
                 }
+
+                response = Ok();
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -1031,7 +1149,11 @@ namespace AspNetCoreFuldaFlats.Controllers
 
                 //offerQuery = offerIds.Any() ? offerQuery.Where(o => offerIds.Contains(o.Id)) : null;
 
-                List<int> offerIds = await _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && t.OfferId != null).Select(t => (int)t.OfferId).ToListAsync();
+                var offerIds =
+                    await
+                        _database.Tag.Where(t => lastSearchParameters.Tags.Contains(t.Title) && (t.OfferId != null))
+                            .Select(t => (int) t.OfferId)
+                            .ToListAsync();
                 offerQuery = offerIds.Any() ? offerQuery.Where(o => offerIds.Contains(o.Id)) : null;
             }
 

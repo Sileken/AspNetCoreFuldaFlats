@@ -14,9 +14,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
+    /// <summary>
+    ///     Endpoints for file upload functions.
+    /// </summary>
     [Route("api/[controller]")]
     public class FilesController : Controller
     {
@@ -34,6 +38,20 @@ namespace AspNetCoreFuldaFlats.Controllers
             _environment = environment;
         }
 
+        /// <summary>
+        ///     Upload a file for an offer.
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        [Produces(typeof(Mediaobject))]
+        [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Mediaobject))]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized, Type = typeof(UploadError))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound, Type = typeof(UploadError))]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, Type = typeof(UploadError))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
+        [Authorize]
         [HttpPost("offers/{offerId}")]
         public async Task<IActionResult> UploadOfferFile([FromRoute] int offerId, [FromForm] IFormFile file)
         {
@@ -69,13 +87,13 @@ namespace AspNetCoreFuldaFlats.Controllers
                     }
                     else if (offer.Landlord != HttpContext.User.GetUserId())
                     {
-                        response = StatusCode((int)HttpStatusCode.Unauthorized,
+                        response = StatusCode((int) HttpStatusCode.Unauthorized,
                             new UploadError {Error = "Only the landlord can upload images for this offer"});
                     }
-                    else if(offer.MediaObjects.Count + 1 > _appSettings.MaxOfferMediaUploads)
+                    else if (offer.MediaObjects.Count + 1 > _appSettings.MaxOfferMediaUploads)
                     {
-                        response = StatusCode((int)HttpStatusCode.Unauthorized,
-                            new UploadError { Error = "You reached the upload limit of 7 images!" });
+                        response = StatusCode((int) HttpStatusCode.Unauthorized,
+                            new UploadError {Error = "You reached the upload limit of 7 images!"});
                     }
                     else
                     {
@@ -105,19 +123,29 @@ namespace AspNetCoreFuldaFlats.Controllers
 
                         _database.Update(newMediaObject);
                         await _database.SaveChangesAsync();
-                        response = StatusCode((int)HttpStatusCode.Created, newMediaObject);
+                        response = StatusCode((int) HttpStatusCode.Created, newMediaObject);
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Upload a user profile picture.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.Redirect)]
+        [SwaggerResponse((int) HttpStatusCode.NotFound, Type = typeof(UploadError))]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, Type = typeof(UploadError))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPost("profilePicture")]
         public async Task<IActionResult> UploadProfilePicutre(IFormFile file)
@@ -165,7 +193,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;

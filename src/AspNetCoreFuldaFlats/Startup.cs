@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -55,9 +56,9 @@ namespace AspNetCoreFuldaFlats
             services.AddSession();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new Info
+                options.SwaggerDoc("v1", new Info
                 {
                     Version = "v1",
                     Title = "FuldaFlats API",
@@ -65,6 +66,7 @@ namespace AspNetCoreFuldaFlats
                     TermsOfService = "None",
                     Contact = new Contact { Name = "Patrick Hasenauer", Email = "patrick.hasenauer@informatik.hs-fulda.de" },
                 });
+               options.IncludeXmlComments(PlatformServices.Default.Application.ApplicationBasePath + "\\AspNetCoreFuldaFlats.xml");
             });
         }
 
@@ -104,10 +106,10 @@ namespace AspNetCoreFuldaFlats
             app.UseMvc();
 
             app.UseSwagger(options => options.RouteTemplate = "api/docs/{documentName}/swagger.json");
-            app.UseSwaggerUI(c =>
+            app.UseSwaggerUI(options =>
             {
-                c.RoutePrefix = "api/docs";
-                c.SwaggerEndpoint("/api/docs/v1/swagger.json", "FuldaFlats API V1");
+                options.RoutePrefix = "api/docs";
+                options.SwaggerEndpoint("/api/docs/v1/swagger.json", "FuldaFlats API V1");
             });
         }
     }

@@ -15,9 +15,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
+    /// <summary>
+    ///     Endpoints for user functions.
+    /// </summary>
     [Route("api/[controller]")]
     public class UsersController : Controller
     {
@@ -25,13 +29,23 @@ namespace AspNetCoreFuldaFlats.Controllers
         private readonly WebApiDataContext _database;
         private readonly ILogger _logger;
 
-        public UsersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext, ILogger<UsersController> logger)
+        public UsersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext,
+            ILogger<UsersController> logger)
         {
             _appSettings = appSettingsOptions.Value;
             _database = webApiDataContext;
             _logger = logger;
         }
 
+        /// <summary>
+        ///     Create a new User (Registration functionality) with given JSON data in the body.
+        /// </summary>
+        /// <param name="signUpInfo"></param>
+        /// <returns></returns>
+        [Produces(typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, Type = typeof(SignUpError))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
         [HttpPost]
         public async Task<IActionResult> SignUp([FromBody] User signUpInfo)
         {
@@ -59,22 +73,32 @@ namespace AspNetCoreFuldaFlats.Controllers
                     await PersistUser(user);
                     await LoadUserRelationships(user);
                     await SignInUser(user);
-                    response = StatusCode((int)HttpStatusCode.Created, user);
+                    response = StatusCode((int) HttpStatusCode.Created, user);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Authenticate current Session with login data.
+        /// </summary>
+        /// <param name="signInData"></param>
+        /// <returns></returns>
+        [Produces(typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(User))]
+        [SwaggerResponse(423)]
+        [SwaggerResponse((int) HttpStatusCode.Forbidden)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
         [HttpPost("auth")]
         public async Task<IActionResult> SigIn([FromBody] SignInInfo signInData)
         {
-            IActionResult response = StatusCode((int)HttpStatusCode.Forbidden);
+            IActionResult response = StatusCode((int) HttpStatusCode.Forbidden);
 
             var email = signInData.Email;
             var password = signInData.Password;
@@ -124,13 +148,19 @@ namespace AspNetCoreFuldaFlats.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode((int)HttpStatusCode.InternalServerError);
+                    response = StatusCode((int) HttpStatusCode.InternalServerError);
                 }
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Sign out (delete authentication in current session).
+        /// </summary>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.NoContent)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
         [HttpDelete("auth")]
         public async Task<IActionResult> SignOut()
         {
@@ -146,13 +176,23 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
 
             return response;
         }
 
+        /// <summary>
+        ///     Retrieve own user data (when sign in).
+        /// </summary>
+        /// <returns></returns>
+        [Produces(typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
@@ -175,12 +215,23 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Manipulate own user data (when sign in) with given JSON data in the body.
+        /// </summary>
+        /// <param name="updateInfo"></param>
+        /// <returns></returns>
+        [Produces(typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, typeof(NormalUserUpdateError))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPut("me")]
         public async Task<IActionResult> UpdateMe([FromBody] User updateInfo)
@@ -228,12 +279,23 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Upgrade the current user to a landlord.
+        /// </summary>
+        /// <param name="upgradeInfo"></param>
+        /// <returns></returns>
+        [Produces(typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, typeof(NormalUserUpdateError))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPut("upgrade")]
         public async Task<IActionResult> UpgradeUser([FromBody] User upgradeInfo)
@@ -284,12 +346,22 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Change the password from the current user.
+        /// </summary>
+        /// <param name="changePasswordInfo"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.NoContent)]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest, typeof(ChangePasswordError))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound, typeof(ChangePasswordError))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPut("changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordInfo changePasswordInfo)
@@ -331,13 +403,25 @@ namespace AspNetCoreFuldaFlats.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode((int)HttpStatusCode.InternalServerError);
+                    response = StatusCode((int) HttpStatusCode.InternalServerError);
                 }
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Set the profile picture from the current user.
+        /// </summary>
+        /// <param name="profilePictureData"></param>
+        /// <returns></returns>
+        [Produces(typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.OK, typeof(User))]
+        [SwaggerResponse((int) HttpStatusCode.BadRequest)]
+        [SwaggerResponse((int) HttpStatusCode.NoContent)]
+        [SwaggerResponse((int) HttpStatusCode.NotFound)]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized)]
         [Authorize]
         [HttpPut("standardPicture")]
         public async Task<IActionResult> SetProfilePicture([FromBody] SetProfilePictureData profilePictureData)
@@ -364,7 +448,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode((int)HttpStatusCode.InternalServerError);
+                    response = StatusCode((int) HttpStatusCode.InternalServerError);
                 }
             }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -12,12 +11,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
+    /// <summary>
+    ///     Endpoints for media object functions.
+    /// </summary>
     [Route("api/[controller]")]
     public class MediaObjectsController : Controller
     {
@@ -35,6 +37,14 @@ namespace AspNetCoreFuldaFlats.Controllers
             _environment = environment;
         }
 
+        /// <summary>
+        ///     Get a offer media object.
+        /// </summary>
+        /// <param name="offerId"></param>
+        /// <returns></returns>
+        [Produces(typeof(List<Mediaobject>))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Mediaobject>))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetMediaObjects(int offerId)
         {
@@ -48,12 +58,21 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
         }
 
+        /// <summary>
+        ///     Delete a media object.
+        /// </summary>
+        /// <param name="mediaObjectId"></param>
+        /// <returns></returns>
+        [SwaggerResponse((int) HttpStatusCode.NoContent)]
+        [SwaggerResponse((int) HttpStatusCode.Unauthorized, Type = typeof(DeleteOfferError))]
+        [SwaggerResponse((int) HttpStatusCode.NotFound, Type = typeof(DeleteOfferError))]
+        [SwaggerResponse((int) HttpStatusCode.InternalServerError)]
         [Authorize]
         [HttpDelete("{mediaObjectId}")]
         public async Task<IActionResult> DeleteMediaObject(int mediaObjectId)
@@ -62,7 +81,8 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             try
             {
-                var mediaobject = await _database.Mediaobject.Include(m => m.Offer).SingleOrDefaultAsync(m => m.Id == mediaObjectId);
+                var mediaobject =
+                    await _database.Mediaobject.Include(m => m.Offer).SingleOrDefaultAsync(m => m.Id == mediaObjectId);
                 if (mediaobject?.Offer == null)
                 {
                     response = NotFound(
@@ -75,7 +95,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 {
                     if (mediaobject.CreatedByUserId != HttpContext.User.GetUserId())
                     {
-                        response = StatusCode((int)HttpStatusCode.Unauthorized,
+                        response = StatusCode((int) HttpStatusCode.Unauthorized,
                             new DeleteOfferError
                             {
                                 Offer = new List<string> {"You can only delete your own offer media objects."}
@@ -83,7 +103,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                     }
                     else
                     {
-                        IFileInfo fileInfo = _environment.ContentRootFileProvider.GetFileInfo(mediaobject.MainUrl);
+                        var fileInfo = _environment.ContentRootFileProvider.GetFileInfo(mediaobject.MainUrl);
                         if (fileInfo.Exists)
                         {
                             System.IO.File.Delete(fileInfo.PhysicalPath);
@@ -97,7 +117,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode((int)HttpStatusCode.InternalServerError);
+                response = StatusCode((int) HttpStatusCode.InternalServerError);
             }
 
             return response;
