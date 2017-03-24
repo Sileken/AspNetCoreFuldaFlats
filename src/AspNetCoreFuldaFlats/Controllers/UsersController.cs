@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -58,13 +59,13 @@ namespace AspNetCoreFuldaFlats.Controllers
                     await PersistUser(user);
                     await LoadUserRelationships(user);
                     await SignInUser(user);
-                    response = StatusCode(201, user);
+                    response = StatusCode((int)HttpStatusCode.Created, user);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -73,7 +74,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         [HttpPost("auth")]
         public async Task<IActionResult> SigIn([FromBody] SignInInfo signInData)
         {
-            IActionResult response = StatusCode(403);
+            IActionResult response = StatusCode((int)HttpStatusCode.Forbidden);
 
             var email = signInData.Email;
             var password = signInData.Password;
@@ -113,7 +114,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                             {
                                 user.LoginAttempts++;
                                 user.IsLocked = true;
-                                response = StatusCode(423);
+                                response = StatusCode(423); // 423 Locked
                             }
                         }
 
@@ -123,7 +124,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode(500);
+                    response = StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
 
@@ -133,7 +134,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         [HttpDelete("auth")]
         public async Task<IActionResult> SignOut()
         {
-            IActionResult response = StatusCode(204);
+            IActionResult response = NoContent();
 
             try
             {
@@ -145,7 +146,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
 
@@ -156,7 +157,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {
-            IActionResult sendStatus = BadRequest();
+            IActionResult response = BadRequest();
 
             try
             {
@@ -164,20 +165,20 @@ namespace AspNetCoreFuldaFlats.Controllers
 
                 if (user == null)
                 {
-                    sendStatus = NotFound();
+                    response = NotFound();
                 }
                 else
                 {
-                    sendStatus = Ok(user);
+                    response = Ok(user);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                sendStatus = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
-            return sendStatus;
+            return response;
         }
 
         [Authorize]
@@ -227,7 +228,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -283,7 +284,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -317,11 +318,11 @@ namespace AspNetCoreFuldaFlats.Controllers
                     {
                         user.Password = newPasswordHash;
                         await UpdateUser(user);
-                        response = StatusCode(204);
+                        response = NoContent();
                     }
                     else
                     {
-                        response = StatusCode(404, new ChangePasswordError
+                        response = NotFound(new ChangePasswordError
                         {
                             Password = new List<string> {"Invalid password."}
                         });
@@ -330,7 +331,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode(500);
+                    response = StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
 
@@ -363,7 +364,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode(500);
+                    response = StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
 

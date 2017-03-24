@@ -1,4 +1,6 @@
-﻿namespace AspNetCoreFuldaFlats.Constants
+﻿using Microsoft.AspNetCore.Mvc.Internal;
+
+namespace AspNetCoreFuldaFlats.Constants
 {
     public static class GlobalConstants
     {
@@ -20,5 +22,12 @@
         public static readonly string SearchParamtersSessionkey = "LastSearchParamters";
 
         public static string DefaultThumbnailUrl { get; set; }
+
+        public enum MediaObjectTypes
+        {
+            Default = 0,
+            Image = 1,
+            Video = 2
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Encodings.Web;
@@ -58,7 +59,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -76,11 +77,13 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             try
             {
-                var offer = new Offer();
-                offer.Landlord = int.Parse(HttpContext.User.GetUserId());
-                offer.Status = (int) GlobalConstants.OfferStatus.Inactive;
-                offer.CreationDate = DateTime.Now;
-                offer.LastModified = DateTime.Now;
+                var offer = new Offer
+                {
+                    Landlord = HttpContext.User.GetUserId(),
+                    Status = (int) GlobalConstants.OfferStatus.Inactive,
+                    CreationDate = DateTime.Now,
+                    LastModified = DateTime.Now
+                };
                 await PersistOffer(offer);
 
                 var reloadedOffer = await _database.Offer
@@ -94,7 +97,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -116,7 +119,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 if (offer != null)
                 {
                     if ((offer.Status != (int) GlobalConstants.OfferStatus.Active) &&
-                        (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
+                        (offer.Landlord != HttpContext.User.GetUserId()))
                     {
                         response = Unauthorized();
                     }
@@ -145,7 +148,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -164,8 +167,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
                 if (offer != null)
                 {
-                    if ((offer.Status != (int) GlobalConstants.OfferStatus.Active) &&
-                        (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
+                    if (offer.Landlord != HttpContext.User.GetUserId())
                     {
                         response = Unauthorized();
                     }
@@ -193,7 +195,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -210,7 +212,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 var offer = await _database.Offer.SingleOrDefaultAsync(o => o.Id == offerId);
                 if (offer != null)
                 {
-                    if (offer.Landlord != int.Parse(HttpContext.User.GetUserId()))
+                    if (offer.Landlord != HttpContext.User.GetUserId())
                     {
                         response = StatusCode(401,
                             new DeleteOfferError
@@ -222,7 +224,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                     {
                         _database.Remove(offer);
                         await _database.SaveChangesAsync();
-                        response = StatusCode(204);
+                        response = NoContent();
                     }
                 }
                 else
@@ -237,7 +239,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -262,13 +264,13 @@ namespace AspNetCoreFuldaFlats.Controllers
                 {
                     HttpContext.Session.SetString(GlobalConstants.SearchParamtersSessionkey,
                         JsonConvert.SerializeObject(searchParamaters));
-                    response = StatusCode(204);
+                    response = NoContent();
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -313,7 +315,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -341,7 +343,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -362,7 +364,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 var offer = await _database.Offer.SingleOrDefaultAsync(o => o.Id == offerId);
                 if (offer != null)
                 {
-                    if ((offer.Status != 1) && (offer.Landlord != int.Parse(HttpContext.User.GetUserId())))
+                    if ((offer.Status != 1) && (offer.Landlord != HttpContext.User.GetUserId()))
                     {
                         response = Unauthorized();
                     }
@@ -381,7 +383,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -393,7 +395,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         {
             IActionResult response = BadRequest();
 
-            var userId = int.Parse(HttpContext.User.GetUserId());
+            var userId = HttpContext.User.GetUserId();
 
             var isError = false;
             var reviewError = new ReviewError();
@@ -468,13 +470,13 @@ namespace AspNetCoreFuldaFlats.Controllers
                         _database.User.Update(offerLandlord);
 
                         await _database.SaveChangesAsync();
-                        response = StatusCode(201);
+                        response = StatusCode((int)HttpStatusCode.Created);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogDebug(null, ex, "Unexpected Issue.");
-                    response = StatusCode(500);
+                    response = StatusCode((int)HttpStatusCode.InternalServerError);
                 }
             }
             else
@@ -500,21 +502,21 @@ namespace AspNetCoreFuldaFlats.Controllers
                 if (
                     !await
                         _database.Favorite.AnyAsync(
-                            f => (f.UserId.ToString() == HttpContext.User.GetUserId()) && (f.OfferId == offerId)))
+                            f => (f.UserId == HttpContext.User.GetUserId()) && (f.OfferId == offerId)))
                 {
                     _database.Favorite.Add(new Favorite
                     {
                         OfferId = offerId,
-                        UserId = int.Parse(HttpContext.User.GetUserId())
+                        UserId = HttpContext.User.GetUserId()
                     });
                     await _database.SaveChangesAsync();
-                    response = StatusCode(201);
+                    response = StatusCode((int)HttpStatusCode.Created);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -531,7 +533,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             {
                 var favorite = await
                     _database.Favorite.SingleOrDefaultAsync(
-                        f => (f.UserId.ToString() == HttpContext.User.GetUserId()) && (f.OfferId == offerId));
+                        f => (f.UserId == HttpContext.User.GetUserId()) && (f.OfferId == offerId));
 
                 if (favorite != null)
                 {
@@ -543,7 +545,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;

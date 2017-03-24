@@ -5,9 +5,9 @@ namespace AspNetCoreFuldaFlats.Extensions
 {
     public static class ClaimsPrincipalExtensions
     {
-        public static string GetUserId(this ClaimsPrincipal principal)
+        public static int GetUserId(this ClaimsPrincipal principal)
         {
-            return principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.PrimarySid).Value;
+            return int.Parse(principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.PrimarySid).Value);
         }
     }
 }

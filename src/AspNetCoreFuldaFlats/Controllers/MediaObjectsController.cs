@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using AspNetCoreFuldaFlats.Database;
 using AspNetCoreFuldaFlats.Database.Models;
@@ -47,7 +48,7 @@ namespace AspNetCoreFuldaFlats.Controllers
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
@@ -72,9 +73,9 @@ namespace AspNetCoreFuldaFlats.Controllers
                 }
                 else
                 {
-                    if (mediaobject.CreatedByUserId != int.Parse(HttpContext.User.GetUserId()))
+                    if (mediaobject.CreatedByUserId != HttpContext.User.GetUserId())
                     {
-                        response = StatusCode(401,
+                        response = StatusCode((int)HttpStatusCode.Unauthorized,
                             new DeleteOfferError
                             {
                                 Offer = new List<string> {"You can only delete your own offer media objects."}
@@ -89,14 +90,14 @@ namespace AspNetCoreFuldaFlats.Controllers
                         }
                         _database.Remove(mediaobject);
                         await _database.SaveChangesAsync();
-                        response = StatusCode(204);
+                        response = NoContent();
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(null, ex, "Unexpected Issue.");
-                response = StatusCode(500);
+                response = StatusCode((int)HttpStatusCode.InternalServerError);
             }
 
             return response;
