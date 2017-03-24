@@ -1,46 +1,105 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreFuldaFlats.Database;
+using AspNetCoreFuldaFlats.Database.Models;
+using AspNetCoreFuldaFlats.Extensions;
+using AspNetCoreFuldaFlats.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace AspNetCoreFuldaFlats.Controllers
 {
     [Route("api/[controller]")]
     public class MediaObjectsController : Controller
     {
-        // GET: api/values
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IHostingEnvironment _environment;
+        private readonly AppSettings _appSettings;
+        private readonly WebApiDataContext _database;
+        private readonly ILogger _logger;
+
+        public MediaObjectsController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext,
+            ILogger<MediaObjectsController> logger, IHostingEnvironment environment)
         {
-            return new string[] { "value1", "value2" };
+            _appSettings = appSettingsOptions.Value;
+            _database = webApiDataContext;
+            _logger = logger;
+            _environment = environment;
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("{offerId}")]
+        public async Task<IActionResult> GetMediaObjects(int offerId)
         {
-            return "value";
+            IActionResult response = BadRequest();
+
+            try
+            {
+                var mediaobjects = await _database.Mediaobject.Where(m => m.OfferId == offerId).ToListAsync();
+                return Ok(mediaobjects);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
+
+            return response;
         }
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody]string value)
+        [Authorize]
+        [HttpDelete("{mediaObjectId}")]
+        public async Task<IActionResult> DeleteMediaObject(int mediaObjectId)
         {
-        }
+            IActionResult response = BadRequest();
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
+            try
+            {
+                var mediaobject = await _database.Mediaobject.Include(m => m.Offer).SingleOrDefaultAsync(m => m.Id == mediaObjectId);
+                if (mediaobject?.Offer == null)
+                {
+                    response = NotFound(
+                        new DeleteOfferError
+                        {
+                            Offer = new List<string> {"The media object was not found."}
+                        });
+                }
+                else
+                {
+                    if (mediaobject.Offer.Landlord != int.Parse(HttpContext.User.GetUserId()))
+                    {
+                        response = StatusCode(401,
+                            new DeleteOfferError
+                            {
+                                Offer = new List<string> {"You can only delete your own offer media objects."}
+                            });
+                    }
+                    else
+                    {
+                        IFileInfo fileInfo = _environment.ContentRootFileProvider.GetFileInfo(mediaobject.MainUrl);
+                        if (fileInfo.Exists)
+                        {
+                            System.IO.File.Delete(fileInfo.PhysicalPath);
+                        }
+                        _database.Remove(mediaobject);
+                        await _database.SaveChangesAsync();
+                        response = StatusCode(204);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(null, ex, "Unexpected Issue.");
+                response = StatusCode(500);
+            }
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            return response;
         }
     }
 }

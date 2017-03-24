@@ -25,9 +25,9 @@ namespace AspNetCoreFuldaFlats.Controllers
         }
 
         [HttpGet]
-        public List<string> GetTags()
+        public IActionResult GetTags()
         {
-            return _appSettings.SupportedTags;
+            return Ok(_appSettings.SupportedTags);
         }
     }
 }

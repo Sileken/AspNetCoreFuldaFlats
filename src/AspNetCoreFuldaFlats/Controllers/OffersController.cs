@@ -28,7 +28,7 @@ namespace AspNetCoreFuldaFlats.Controllers
         private readonly WebApiDataContext _database;
         private readonly ILogger _logger;
 
-        public OffersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext, ILogger<UsersController> logger)
+        public OffersController(IOptions<AppSettings> appSettingsOptions, WebApiDataContext webApiDataContext, ILogger<OffersController> logger)
         {
             _appSettings = appSettingsOptions.Value;
             _database = webApiDataContext;
