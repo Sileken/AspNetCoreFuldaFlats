@@ -62,7 +62,7 @@ namespace AspNetCoreFuldaFlats.Controllers
 
             try
             {
-                var mediaobject = await _database.Mediaobject.SingleOrDefaultAsync(m => m.Id == mediaObjectId);
+                var mediaobject = await _database.Mediaobject.Include(m => m.Offer).SingleOrDefaultAsync(m => m.Id == mediaObjectId);
                 if (mediaobject?.Offer == null)
                 {
                     response = NotFound(

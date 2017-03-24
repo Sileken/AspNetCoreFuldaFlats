@@ -25,5 +25,6 @@ namespace AspNetCoreFuldaFlats.Models
         public int MinPasswordLength { get; set; }
         public int MaxUploadFileSizeInBytes { get; set; }
         public List<string> SupportedImageContentTypes { get; set; }
+        public int MaxOfferMediaUploads { get; set; }
     }
 }

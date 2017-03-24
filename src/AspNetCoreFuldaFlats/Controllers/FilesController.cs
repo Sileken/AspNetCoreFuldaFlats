@@ -34,8 +34,8 @@ namespace AspNetCoreFuldaFlats.Controllers
             _environment = environment;
         }
 
-        [HttpPost("offer/{offerId}")]
-        public async Task<IActionResult> UploadOfferFile([FromRoute] int offerId, [FromBody] IFormFile file)
+        [HttpPost("offers/{offerId}")]
+        public async Task<IActionResult> UploadOfferFile([FromRoute] int offerId, [FromForm] IFormFile file)
         {
             IActionResult response = BadRequest();
 
@@ -60,7 +60,7 @@ namespace AspNetCoreFuldaFlats.Controllers
                 }
                 else
                 {
-                    var offer = await _database.Offer
+                    var offer = await _database.Offer.Include(o => o.MediaObjects)
                         .SingleOrDefaultAsync(o => o.Id == offerId);
 
                     if (offer == null)
@@ -71,6 +71,11 @@ namespace AspNetCoreFuldaFlats.Controllers
                     {
                         response = StatusCode((int)HttpStatusCode.Unauthorized,
                             new UploadError {Error = "Only the landlord can upload images for this offer"});
+                    }
+                    else if(offer.MediaObjects.Count + 1 > _appSettings.MaxOfferMediaUploads)
+                    {
+                        response = StatusCode((int)HttpStatusCode.Unauthorized,
+                            new UploadError { Error = "You reached the upload limit of 7 images!" });
                     }
                     else
                     {
