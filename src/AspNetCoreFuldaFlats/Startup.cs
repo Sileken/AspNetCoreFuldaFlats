@@ -28,7 +28,7 @@ namespace AspNetCoreFuldaFlats
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
-            .SetBasePath(env.ContentRootPath + "/Configs")
+            .SetBasePath(Path.Combine(env.ContentRootPath, "Configs"))
             .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true)
             .AddEnvironmentVariables();
             Configuration = builder.Build();
@@ -66,7 +66,7 @@ namespace AspNetCoreFuldaFlats
                     TermsOfService = "None",
                     Contact = new Contact { Name = "Patrick Hasenauer", Email = "patrick.hasenauer@informatik.hs-fulda.de" },
                 });
-               options.IncludeXmlComments(PlatformServices.Default.Application.ApplicationBasePath + "\\AspNetCoreFuldaFlats.xml");
+               options.IncludeXmlComments(Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "AspNetCoreFuldaFlats.xml"));
             });
         }
 
