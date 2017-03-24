@@ -667,27 +667,27 @@ namespace AspNetCoreFuldaFlats.Controllers
         {
             var officeAddresse = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(user.ZipCode))
+            if (!string.IsNullOrWhiteSpace(user.ZipCode))
             {
                 officeAddresse += user.ZipCode;
             }
-            if (string.IsNullOrWhiteSpace(user.City))
+            if (!string.IsNullOrWhiteSpace(user.City))
             {
-                if (string.IsNullOrWhiteSpace(user.ZipCode))
+                if (!string.IsNullOrWhiteSpace(user.ZipCode))
                 {
                     officeAddresse += " ";
                 }
                 officeAddresse += user.City;
             }
-            if (string.IsNullOrWhiteSpace(user.Street))
+            if (!string.IsNullOrWhiteSpace(user.Street))
             {
-                if (string.IsNullOrWhiteSpace(officeAddresse))
+                if (!string.IsNullOrWhiteSpace(officeAddresse))
                 {
                     officeAddresse += ", ";
                 }
                 officeAddresse += user.Street;
 
-                if (string.IsNullOrWhiteSpace(user.HouseNumber))
+                if (!string.IsNullOrWhiteSpace(user.HouseNumber))
                 {
                     officeAddresse += " ";
                     officeAddresse += user.HouseNumber;
